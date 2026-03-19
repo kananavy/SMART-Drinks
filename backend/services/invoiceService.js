@@ -44,8 +44,8 @@ class InvoiceService {
             // --- Invoice Info ---
             doc.fontSize(16).text('FACTURE / REÇU', 50, 130);
             doc.fontSize(10)
-                .text(`Facture N°: INV-${order.id}-${new Date(order.created_at).getTime()}`, 50, 155)
-                .text(`Date: ${new Date(order.created_at).toLocaleDateString()}`, 50, 170)
+                .text(`Facture N°: INV-${order.id}-${new Date(order.createdAt || order.created_at).getTime()}`, 50, 155)
+                .text(`Date: ${new Date(order.createdAt || order.created_at).toLocaleDateString('fr-FR')}`, 50, 170)
                 .text(`Statut: ${order.status.toUpperCase()}`, 50, 185);
 
             // --- Table Header ---
@@ -64,9 +64,10 @@ class InvoiceService {
             doc.font('Helvetica');
 
             order.items.forEach(item => {
-                const total = item.price * item.quantity;
+                const unitPrice = parseFloat(item.unit_price) || 0;
+                const total = unitPrice * item.quantity;
                 doc.text(item.Product.name, 50, currentY);
-                doc.text(`${item.price.toLocaleString()} ${settings.currency_symbol || 'Ar'}`, 280, currentY, { width: 90, align: 'right' });
+                doc.text(`${unitPrice.toLocaleString()} ${settings.currency_symbol || 'Ar'}`, 280, currentY, { width: 90, align: 'right' });
                 doc.text(item.quantity.toString(), 370, currentY, { width: 40, align: 'right' });
                 doc.text(`${total.toLocaleString()} ${settings.currency_symbol || 'Ar'}`, 410, currentY, { width: 90, align: 'right' });
 
@@ -77,7 +78,8 @@ class InvoiceService {
             // --- Totals Section ---
             const footerTop = currentY + 30;
             doc.fontSize(12).font('Helvetica-Bold');
-            doc.text(`TOTAL À PAYER : ${order.total_amount.toLocaleString()} ${settings.currency_symbol || 'Ar'}`, 350, footerTop, { width: 200, align: 'right' });
+            const orderTotal = parseFloat(order.total) || 0;
+            doc.text(`TOTAL À PAYER : ${orderTotal.toLocaleString()} ${settings.currency_symbol || 'Ar'}`, 350, footerTop, { width: 200, align: 'right' });
 
             // --- Legal Footer ---
             const pageHeight = doc.page.height;

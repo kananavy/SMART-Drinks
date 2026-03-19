@@ -2,14 +2,20 @@ import axios from 'axios';
 
 const api = axios.create({
     baseURL: '/api',
-    headers: { 'Content-Type': 'application/json' },
 });
 
-// Add auth token to all requests
+// Add auth token + correct Content-Type to all requests
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('bar_token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+    }
+    // For FormData (file uploads), let the browser set the multipart boundary automatically.
+    // For everything else, use JSON.
+    if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+    } else {
+        config.headers['Content-Type'] = 'application/json';
     }
     return config;
 });

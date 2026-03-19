@@ -1,32 +1,45 @@
 <template>
   <div class="client-layout-premium pb-20 md:pb-0">
-    <!-- Desktop Header / Mobile Header -->
-    <header class="client-header glass sticky top-0 z-[100] px-4 py-3 md:px-8">
-      <div class="layout-container flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <span class="text-2xl">🍸</span>
-          <div class="flex flex-col leading-none">
-            <span class="font-display font-extrabold text-sm md:text-lg uppercase italic tracking-tight">LE BAR LOUNGE</span>
-            <div class="flex items-center gap-2" v-if="session">
-               <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
-               <span class="text-[9px] text-secondary font-bold uppercase tracking-widest">Table: {{ session.table_name }}</span>
+    <header class="glass sticky top-0 z-[100] px-4 py-3 md:px-8 border-b border-color">
+      <div class="layout-container flex items-center justify-between gap-3">
+        <!-- Logo + Bar name -->
+        <div class="flex items-center gap-3 min-w-0">
+          <img v-if="appSettings.logo" :src="appSettings.logo" class="h-8 object-contain flex-shrink-0" />
+          <span v-else class="text-2xl flex-shrink-0">🍸</span>
+          <div class="flex flex-col leading-none min-w-0">
+            <span class="font-display font-extrabold text-sm md:text-base uppercase italic tracking-tight truncate">
+              {{ appSettings.bar_name || 'LE BAR LOUNGE' }}
+            </span>
+            <div v-if="appSettings.bar_slogan" class="hidden sm:block">
+              <span class="text-[9px] text-muted font-medium italic truncate">{{ appSettings.bar_slogan }}</span>
             </div>
           </div>
         </div>
-        
-        <div class="flex items-center gap-4">
+
+        <!-- Table session badge -->
+        <div v-if="session" class="hidden sm:flex items-center gap-2 glass px-3 py-1.5 rounded-full border border-success/20 flex-shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
+          <span class="text-[10px] text-success font-bold uppercase tracking-widest">{{ session.table_name }}</span>
+        </div>
+
+        <!-- User + Logout -->
+        <div class="flex items-center gap-3 flex-shrink-0">
           <div v-if="auth.user" class="hidden sm:flex flex-col items-end leading-none">
-            <span class="text-[10px] text-secondary font-bold uppercase mb-1">Client</span>
-            <span class="text-xs font-semibold">{{ auth.user.name }}</span>
+            <span class="text-[10px] text-secondary font-bold uppercase">{{ auth.user.name }}</span>
+            <span v-if="session" class="text-[9px] text-muted sm:hidden">{{ session.table_name }}</span>
           </div>
-          <button @click="handleLogout" class="p-2 hover:bg-white/5 rounded-lg transition-colors text-danger" title="Déconnexion">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <button @click="handleLogout"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-danger/20 text-danger hover:bg-danger/10 transition-all text-[10px] font-black uppercase tracking-widest"
+            title="Déconnexion">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            <span class="hidden sm:inline">Quitter</span>
           </button>
         </div>
       </div>
     </header>
 
-    <!-- Main Content -->
     <main class="layout-container py-6 min-h-[calc(100vh-140px)]">
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
@@ -54,67 +67,31 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useToastStore } from '@/stores/toast';
+import { useSettingsStore } from '@/stores/settings';
 
 const router = useRouter();
 const auth = useAuthStore();
 const toast = useToastStore();
+const settingsStore = useSettingsStore();
 
 const session = computed(() => auth.session);
+const appSettings = computed(() => settingsStore.settings);
+
+onMounted(() => settingsStore.load());
 
 const handleLogout = () => {
   auth.logout();
-  toast.info('Déconnecté');
+  toast.info('Deconnecte');
   router.push('/');
 };
 </script>
 
 <style scoped>
-.client-layout { min-height: 100vh; }
-
-.client-header {
-  position: fixed; top: 0; left: 0; right: 0;
-  z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 30px;
-  gap: 16px;
-}
-
-.header-left { display: flex; align-items: center; gap: 10px; }
-.brand-icon { font-size: 24px; }
-.header-brand { font-family: var(--font-display); font-size: 18px; font-weight: 800; }
-
-.header-nav { display: flex; gap: 4px; }
-
-.nav-item {
-  padding: 8px 16px; border-radius: var(--radius-md);
-  text-decoration: none; color: var(--text-secondary);
-  font-size: 13px; font-weight: 500;
-  transition: all 0.2s;
-}
-
-.nav-item:hover, .nav-item.active {
-  color: var(--primary-light);
-  background: rgba(99, 102, 241, 0.1);
-}
-
-.header-right { display: flex; align-items: center; gap: 12px; }
-
-.session-info { padding: 6px 14px; font-size: 12px; }
-.table-badge { font-weight: 600; }
-
-.client-main { padding: 80px 30px 30px; max-width: 1200px; margin: 0 auto; }
-
-@media (max-width: 768px) {
-  .client-header {
-    flex-wrap: wrap; padding: 10px 16px;
-    justify-content: center; gap: 8px;
-  }
-  .header-brand { display: none; }
-  .header-nav { order: 3; width: 100%; justify-content: center; }
-  .client-main { padding: 130px 16px 16px; }
+.shadow-glow {
+  box-shadow: 0 -4px 20px rgba(99, 102, 241, 0.15);
 }
 </style>

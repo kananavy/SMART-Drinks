@@ -39,6 +39,7 @@ const routes = [
             { path: 'settings', name: 'admin-settings', component: () => import('@/pages/admin/settings/AppSettings.vue') },
             { path: 'activity-log', name: 'admin-logs', component: () => import('@/pages/admin/ActivityLog.vue') },
             { name: 'admin-billing', path: 'billing', component: () => import('@/pages/admin/BillingManagement.vue') },
+            { path: 'plans', name: 'admin-plans', component: () => import('@/pages/admin/plans/PlanManagement.vue') },
         ],
     },
 ];

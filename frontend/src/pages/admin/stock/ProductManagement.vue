@@ -25,8 +25,13 @@
     
     <!-- Product Adaptive Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <div v-for="p in filtered" :key="p.id" class="glass-card p-6 flex flex-col group translate-hover border border-white/5">
-        <div class="flex-1">
+      <div v-for="p in filtered" :key="p.id" class="glass-card flex flex-col group translate-hover border border-white/5 overflow-hidden">
+        <!-- Product image -->
+        <div v-if="p.image" class="h-36 overflow-hidden relative">
+          <img :src="p.image" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        </div>
+        <div class="flex-1 p-6" :class="p.image ? 'pt-3' : ''">
           <div class="flex justify-between items-start mb-4">
              <span class="text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary-light px-2 py-0.5 rounded-full border border-primary/20">
                {{ p.Category?.name }}
@@ -45,12 +50,13 @@
           </div>
         </div>
 
-        <div class="pt-4 border-t border-color flex items-center justify-between">
-          <div class="flex flex-col">
-            <span class="text-[9px] font-bold text-muted uppercase tracking-widest">Stock Disponible</span>
-            <span :class="['font-black text-sm', p.stock_quantity <= 5 ? 'text-danger' : 'text-success']">{{ p.stock_quantity }} unités</span>
+          <div class="pt-4 border-t border-color flex items-center justify-between">
+            <div class="flex flex-col">
+              <span class="text-[9px] font-bold text-muted uppercase tracking-widest">Stock Disponible</span>
+              <span :class="['font-black text-sm', p.stock_quantity <= 5 ? 'text-danger' : 'text-success']">{{ p.stock_quantity }} unités</span>
+            </div>
+            <div :class="['w-2.5 h-2.5 rounded-full shadow-glow', p.available ? 'bg-success' : 'bg-danger']"></div>
           </div>
-          <div :class="['w-2.5 h-2.5 rounded-full shadow-glow', p.available ? 'bg-success' : 'bg-danger']"></div>
         </div>
       </div>
     </div>
@@ -97,6 +103,19 @@
             <textarea v-model="form.description" class="input-premium w-full" rows="3" placeholder="Ingrédients ou informations..."></textarea>
           </div>
 
+          <!-- Image upload -->
+          <div class="space-y-2">
+            <label class="text-[10px] font-black uppercase tracking-widest text-secondary">Photo du produit</label>
+            <div class="relative glass border-color rounded-2xl h-32 flex flex-col items-center justify-center group overflow-hidden cursor-pointer hover:border-primary/30 transition-all">
+              <img v-if="productImagePreview || form.image" :src="productImagePreview || form.image" class="absolute inset-0 w-full h-full object-cover opacity-60" />
+              <div class="z-10 text-center">
+                <span class="text-2xl mb-1 block">📸</span>
+                <span class="text-[9px] font-black uppercase opacity-70">{{ productImagePreview ? 'Changer la photo' : 'Ajouter une photo' }}</span>
+              </div>
+              <input type="file" accept="image/*" @change="handleProductImage" class="absolute inset-0 opacity-0 cursor-pointer" />
+            </div>
+          </div>
+
           <div class="flex gap-4 pt-6">
             <button type="submit" class="btn btn-primary flex-1 py-4 uppercase font-black" :disabled="submitting">
               {{ submitting ? 'Enregistrement...' : 'Enregistrer le produit' }}
@@ -126,7 +145,16 @@ const submitting = ref(false);
 const editingId = ref(null);
 const activeCat = ref(null);
 
-const form = reactive({ name: '', category_id: '', price: 0, consignation_price: 0, stock_quantity: 0, description: '' });
+const form = reactive({ name: '', category_id: '', price: 0, consignation_price: 0, stock_quantity: 0, description: '', image: '' });
+const productImageFile = ref(null);
+const productImagePreview = ref(null);
+
+const handleProductImage = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  productImageFile.value = file;
+  productImagePreview.value = URL.createObjectURL(file);
+};
 
 const filtered = computed(() => activeCat.value ? products.value.filter(p => p.category_id === activeCat.value) : products.value);
 const formatPrice = (p) => new Intl.NumberFormat('fr-FR').format(p) + ' Ar';
@@ -142,12 +170,14 @@ const fetchData = async () => {
 };
 
 const openForm = (p = null) => {
+  productImageFile.value = null;
+  productImagePreview.value = null;
   if (p) {
     editing.value = true; editingId.value = p.id;
-    Object.assign(form, { name: p.name, category_id: p.category_id, price: p.price, consignation_price: p.consignation_price, stock_quantity: p.stock_quantity, description: p.description || '' });
+    Object.assign(form, { name: p.name, category_id: p.category_id, price: p.price, consignation_price: p.consignation_price, stock_quantity: p.stock_quantity, description: p.description || '', image: p.image || '' });
   } else {
     editing.value = false;
-    Object.assign(form, { name: '', category_id: categories.value[0]?.id || '', price: 0, consignation_price: 0, stock_quantity: 0, description: '' });
+    Object.assign(form, { name: '', category_id: categories.value[0]?.id || '', price: 0, consignation_price: 0, stock_quantity: 0, description: '', image: '' });
   }
   showForm.value = true;
 };
@@ -155,11 +185,21 @@ const openForm = (p = null) => {
 const submitProduct = async () => {
   submitting.value = true;
   try {
+    // Use FormData to support optional image upload
+    const fd = new FormData();
+    fd.append('name', form.name);
+    fd.append('category_id', form.category_id);
+    fd.append('price', form.price);
+    fd.append('consignation_price', form.consignation_price);
+    fd.append('stock_quantity', form.stock_quantity);
+    fd.append('description', form.description || '');
+    if (productImageFile.value) fd.append('image', productImageFile.value);
+
     if (editing.value) {
-      await api.put(`/admin/products/${editingId.value}`, form);
+      await api.put(`/admin/products/${editingId.value}`, fd);
       toast.success('Produit mis à jour');
     } else {
-      await api.post('/admin/products', form);
+      await api.post('/admin/products', fd);
       toast.success('Référence créée');
     }
     showForm.value = false;

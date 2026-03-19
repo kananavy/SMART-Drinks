@@ -91,7 +91,7 @@
                   <span class="text-2xl mb-1 block">🖼️</span>
                   <span class="text-[9px] font-black uppercase opacity-70">Sélectionner un visuel</span>
                 </div>
-                <input type="file" @change="handleImageUpload" class="absolute inset-0 opacity-0 cursor-pointer" />
+                <input type="file" accept="image/*" @change="handleImageUpload" class="absolute inset-0 opacity-0 cursor-pointer" />
              </div>
           </div>
 
