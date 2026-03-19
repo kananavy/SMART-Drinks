@@ -85,14 +85,7 @@
 
           <div class="space-y-2">
              <label class="text-[10px] font-black uppercase tracking-widest text-secondary">Image de couverture</label>
-             <div class="relative glass border-color rounded-2xl h-32 flex flex-col items-center justify-center group overflow-hidden">
-                <img v-if="previewImage || form.image" :src="previewImage || form.image" class="absolute inset-0 w-full h-full object-cover opacity-50" />
-                <div class="z-10 text-center">
-                  <span class="text-2xl mb-1 block">🖼️</span>
-                  <span class="text-[9px] font-black uppercase opacity-70">Sélectionner un visuel</span>
-                </div>
-                <input type="file" accept="image/*" @change="handleImageUpload" class="absolute inset-0 opacity-0 cursor-pointer" />
-             </div>
+             <ImageUploader :modelValue="previewImage || form.image" @uploaded="(file) => { fileToUpload = file; previewImage = URL.createObjectURL(file); }" />
           </div>
 
           <div class="flex gap-4 pt-6">
@@ -113,6 +106,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import api from '@/services/api';
 import { useToastStore } from '@/stores/toast';
+import ImageUploader from '@/components/ImageUploader.vue';
 
 const toast = useToastStore();
 const categories = ref([]);

@@ -56,24 +56,14 @@
             </div>
 
             <!-- Logo & Favicon -->
-            <div class="space-y-2">
-              <label class="settings-label">Logo & Favicon</label>
-              <div class="flex gap-4">
-                <div class="flex-1 glass border-color rounded-2xl p-4 flex flex-col items-center justify-center gap-3 relative overflow-hidden cursor-pointer hover:border-primary/30 transition-all min-h-[90px]">
-                  <img v-if="s.logo" :src="s.logo" class="h-14 object-contain" />
-                  <div v-else class="flex flex-col items-center gap-1 text-muted">
-                    <span class="text-3xl opacity-30">🖼️</span>
-                    <span class="text-[10px] font-bold uppercase">Logo</span>
-                  </div>
-                  <input type="file" accept="image/*" @change="e => uploadFile(e, 'logo')" class="absolute inset-0 opacity-0 cursor-pointer" />
-                  <span class="text-[9px] font-black uppercase tracking-tighter opacity-40">Cliquer pour changer</span>
-                </div>
-                <div class="w-24 glass border-color rounded-2xl p-4 flex flex-col items-center justify-center gap-3 relative overflow-hidden cursor-pointer hover:border-primary/30 transition-all">
-                  <img v-if="s.favicon" :src="s.favicon" class="h-8 w-8 object-contain" />
-                  <span v-else class="text-2xl opacity-30">🌟</span>
-                  <input type="file" accept="image/*" @change="e => uploadFile(e, 'favicon')" class="absolute inset-0 opacity-0 cursor-pointer" />
-                  <span class="text-[8px] font-black uppercase opacity-40">Favicon</span>
-                </div>
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <label class="settings-label">Logo</label>
+                <ImageUploader v-model="s.logo" uploadKey="logo" fieldName="file" compact />
+              </div>
+              <div class="space-y-2">
+                <label class="settings-label">Favicon</label>
+                <ImageUploader v-model="s.favicon" uploadKey="favicon" fieldName="file" compact />
               </div>
             </div>
           </div>
@@ -156,20 +146,7 @@
             <!-- Background image with preview -->
             <div class="space-y-2">
               <label class="settings-label">Image de fond</label>
-              <div class="flex gap-3">
-                <input v-model="s.landing_bg_image" class="input-premium flex-1" placeholder="/uploads/hero-bg.jpg" />
-                <div class="relative">
-                  <input type="file" accept="image/*" @change="e => uploadFile(e, 'landing_bg_image')" class="absolute inset-0 opacity-0 cursor-pointer w-full" />
-                  <button class="btn btn-secondary text-xs px-4 py-2.5 whitespace-nowrap">📁 Uploader</button>
-                </div>
-              </div>
-              <!-- Image preview -->
-              <div v-if="s.landing_bg_image" class="mt-3 rounded-2xl overflow-hidden h-36 border border-white/10 relative">
-                <img :src="s.landing_bg_image" class="w-full h-full object-cover" :onerror="(e) => e.target.style.display='none'" />
-                <div class="absolute inset-0 flex items-end p-3 bg-gradient-to-t from-black/50 to-transparent">
-                  <span class="text-white text-[10px] font-black uppercase tracking-widest opacity-70">Aperçu image de fond</span>
-                </div>
-              </div>
+              <ImageUploader v-model="s.landing_bg_image" uploadKey="landing_bg_image" fieldName="file" />
             </div>
 
             <div class="space-y-2">
@@ -505,6 +482,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import api from '@/services/api';
 import { useToastStore } from '@/stores/toast';
 import { usePlanStore } from '@/stores/plan';
+import ImageUploader from '@/components/ImageUploader.vue';
 
 const toast = useToastStore();
 const planStore = usePlanStore();

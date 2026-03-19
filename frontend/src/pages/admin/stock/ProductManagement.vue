@@ -50,13 +50,12 @@
           </div>
         </div>
 
-          <div class="pt-4 border-t border-color flex items-center justify-between">
-            <div class="flex flex-col">
-              <span class="text-[9px] font-bold text-muted uppercase tracking-widest">Stock Disponible</span>
-              <span :class="['font-black text-sm', p.stock_quantity <= 5 ? 'text-danger' : 'text-success']">{{ p.stock_quantity }} unités</span>
-            </div>
-            <div :class="['w-2.5 h-2.5 rounded-full shadow-glow', p.available ? 'bg-success' : 'bg-danger']"></div>
+        <div class="px-6 pb-5 pt-3 border-t border-color flex items-center justify-between">
+          <div class="flex flex-col">
+            <span class="text-[9px] font-bold text-muted uppercase tracking-widest">Stock</span>
+            <span :class="['font-black text-sm', p.stock_quantity <= 5 ? 'text-danger' : 'text-success']">{{ p.stock_quantity }} unités</span>
           </div>
+          <div :class="['w-2.5 h-2.5 rounded-full shadow-glow', p.available ? 'bg-success' : 'bg-danger']"></div>
         </div>
       </div>
     </div>
@@ -106,14 +105,7 @@
           <!-- Image upload -->
           <div class="space-y-2">
             <label class="text-[10px] font-black uppercase tracking-widest text-secondary">Photo du produit</label>
-            <div class="relative glass border-color rounded-2xl h-32 flex flex-col items-center justify-center group overflow-hidden cursor-pointer hover:border-primary/30 transition-all">
-              <img v-if="productImagePreview || form.image" :src="productImagePreview || form.image" class="absolute inset-0 w-full h-full object-cover opacity-60" />
-              <div class="z-10 text-center">
-                <span class="text-2xl mb-1 block">📸</span>
-                <span class="text-[9px] font-black uppercase opacity-70">{{ productImagePreview ? 'Changer la photo' : 'Ajouter une photo' }}</span>
-              </div>
-              <input type="file" accept="image/*" @change="handleProductImage" class="absolute inset-0 opacity-0 cursor-pointer" />
-            </div>
+            <ImageUploader :modelValue="productImagePreview || form.image" @uploaded="(file) => { productImageFile = file; productImagePreview = URL.createObjectURL(file); }" />
           </div>
 
           <div class="flex gap-4 pt-6">
@@ -134,6 +126,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import api from '@/services/api';
 import { useToastStore } from '@/stores/toast';
+import ImageUploader from '@/components/ImageUploader.vue';
 
 const toast = useToastStore();
 const products = ref([]);
