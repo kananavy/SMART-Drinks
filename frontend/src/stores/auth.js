@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import api from '@/services/api';
+import { usePermissionsStore } from '@/stores/permissions';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -10,7 +11,7 @@ export const useAuthStore = defineStore('auth', {
 
     getters: {
         isAuthenticated: (state) => !!state.token,
-        isAdmin: (state) => ['vendeur', 'caissier', 'superadmin'].includes(state.user?.role),
+        isAdmin: (state) => ['vendeur', 'caissier', 'admin', 'superadmin'].includes(state.user?.role),
         isClient: (state) => state.user?.role === 'client',
         userRole: (state) => state.user?.role || null,
     },
@@ -34,12 +35,16 @@ export const useAuthStore = defineStore('auth', {
             localStorage.removeItem('bar_token');
             localStorage.removeItem('bar_user');
             localStorage.removeItem('bar_session');
+            // The permissions store will be reset implicitly on next page load
+            // as the user will be null.
+            usePermissionsStore().reset();
         },
 
         async loginAdmin(email, password) {
             const { data } = await api.post('/auth/login', { email, password });
             if (data.success) {
                 this.setAuth(data.data);
+                await usePermissionsStore().initialize(data.data.user);
             }
             return data;
         },
@@ -48,6 +53,7 @@ export const useAuthStore = defineStore('auth', {
             const { data } = await api.post('/auth/login/client', { table_name, contact, access_code });
             if (data.success) {
                 this.setAuth(data.data);
+                await usePermissionsStore().initialize(data.data.user);
             }
             return data;
         },
@@ -56,8 +62,17 @@ export const useAuthStore = defineStore('auth', {
             const { data } = await api.post('/auth/register', formData);
             if (data.success) {
                 this.setAuth(data.data);
+                await usePermissionsStore().initialize(data.data.user);
             }
             return data;
+        },
+
+        // Initialize permissions on app bootstrap
+        async initializePermissions() {
+            if (this.token && this.user) {
+                const permissionsStore = usePermissionsStore();
+                await permissionsStore.initialize(this.user);
+            }
         },
     },
 });

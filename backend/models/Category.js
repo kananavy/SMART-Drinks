@@ -10,7 +10,9 @@ const Category = sequelize.define('Category', {
     name: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
+        unique: {
+            name: 'unique_category_name'
+        }
     },
     icon: {
         type: DataTypes.STRING,

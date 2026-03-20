@@ -1,17 +1,18 @@
 const router = require('express').Router();
+const { Op } = require('sequelize');
 const { Order, OrderItem, Product, Payment, ClientSession } = require('../models');
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
-const { success, error } = require('../utils/response');
+const { success, error, paginate } = require('../utils/response');
 const logActivity = require('../utils/logActivity');
 
 router.use(auth);
 router.use(role('caissier', 'superadmin'));
 
-// ── Get Validated Orders (awaiting payment) ──
+// ── Get Orders ──
 router.get('/orders', async (req, res) => {
     try {
-        const { status } = req.query;
+        const { status, search } = req.query;
         const where = {};
         if (status) {
             where.status = status;
@@ -29,10 +30,51 @@ router.get('/orders', async (req, res) => {
             order: [['created_at', 'DESC']],
         });
 
-        return success(res, { orders });
+        // Apply search filter in-memory (order_number or table_name)
+        let filtered = orders;
+        if (search) {
+            const q = search.toLowerCase();
+            filtered = orders.filter(o =>
+                o.order_number?.toLowerCase().includes(q) ||
+                o.ClientSession?.table_name?.toLowerCase().includes(q)
+            );
+        }
+
+        return success(res, { orders: filtered });
     } catch (err) {
         console.error('Cashier orders error:', err);
         return error(res, 'Erreur lors du chargement');
+    }
+});
+
+// ── Cashier Daily Stats ──
+router.get('/stats', async (req, res) => {
+    try {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayStart = new Date(todayStr + 'T00:00:00.000Z');
+        const todayEnd = new Date(todayStr + 'T23:59:59.999Z');
+
+        const todayPayments = await Payment.findAll({
+            where: {
+                status: 'paid',
+                created_at: { [Op.between]: [todayStart, todayEnd] },
+            },
+        });
+
+        const totalToday = todayPayments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+        const byMethod = { cash: 0, mobile_money: 0, card: 0 };
+        todayPayments.forEach(p => {
+            if (byMethod[p.method] !== undefined) byMethod[p.method] += parseFloat(p.amount || 0);
+        });
+
+        return success(res, {
+            totalToday,
+            countToday: todayPayments.length,
+            byMethod,
+        });
+    } catch (err) {
+        console.error('Cashier stats error:', err);
+        return error(res, 'Erreur stats');
     }
 });
 
@@ -90,6 +132,63 @@ router.post('/payments', async (req, res) => {
     } catch (err) {
         console.error('Payment error:', err);
         return error(res, 'Erreur lors du paiement');
+    }
+});
+
+// ── Caissier Billing (own processed payments + orders) ──
+router.get('/billing', async (req, res) => {
+    try {
+        const { page = 1, limit = 20, search = '', date_from = '', date_to = '', status } = req.query;
+
+        const where = {};
+        if (status) {
+            where.status = status;
+        } else {
+            where.status = ['validated', 'paid'];
+        }
+
+        // Date range
+        if (date_from || date_to) {
+            where.created_at = {};
+            if (date_from) where.created_at[Op.gte] = new Date(date_from);
+            if (date_to) {
+                const end = new Date(date_to);
+                end.setHours(23, 59, 59, 999);
+                where.created_at[Op.lte] = end;
+            }
+        }
+
+        const allOrders = await Order.findAll({
+            where,
+            include: [
+                { model: OrderItem, as: 'items', include: [Product] },
+                { model: ClientSession },
+                { model: Payment },
+            ],
+            order: [['created_at', 'DESC']],
+        });
+
+        // Search filter
+        let filtered = allOrders;
+        if (search) {
+            const q = search.toLowerCase();
+            filtered = allOrders.filter(o =>
+                o.order_number?.toLowerCase().includes(q) ||
+                o.ClientSession?.table_name?.toLowerCase().includes(q)
+            );
+        }
+
+        const total = filtered.length;
+        const pageInt = parseInt(page);
+        const limitInt = parseInt(limit);
+        const totalPages = Math.ceil(total / limitInt);
+        const offset = (pageInt - 1) * limitInt;
+        const paginated = filtered.slice(offset, offset + limitInt);
+
+        return paginate(res, paginated, total, pageInt, limitInt);
+    } catch (err) {
+        console.error('Cashier billing error:', err);
+        return error(res, 'Erreur de chargement');
     }
 });
 

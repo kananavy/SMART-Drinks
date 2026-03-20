@@ -6,21 +6,24 @@
         <h1 class="text-3xl font-display font-black tracking-tighter">MES PAIEMENTS</h1>
         <p class="text-secondary text-sm mt-1">Historique de tous vos règlements</p>
       </div>
-      <div class="glass px-5 py-3 rounded-2xl border border-white/5 flex items-center gap-3">
-        <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-        <span class="text-xs font-bold uppercase tracking-widest text-muted">{{ payments.length }} paiement{{ payments.length !== 1 ? 's' : '' }}</span>
-      </div>
+      <button @click="fetchPayments" class="glass px-4 py-2.5 rounded-xl border border-white/5 flex items-center gap-2 hover:border-primary/30 transition-all text-xs font-bold uppercase tracking-widest text-secondary hover:text-white">
+        <span :class="{ 'animate-spin': loading }">🔄</span> Actualiser
+      </button>
     </div>
 
     <!-- Summary -->
-    <div v-if="!loading && payments.length > 0" class="grid grid-cols-2 gap-4 mb-8">
+    <div v-if="!loading && payments.length > 0" class="grid grid-cols-3 gap-4 mb-8">
       <div class="glass-card p-5 text-center">
         <span class="text-2xl font-display font-black text-success block">{{ formatPrice(totalPaid) }}</span>
-        <span class="text-[10px] uppercase tracking-widest text-muted font-bold mt-1 block">Total paye</span>
+        <span class="text-[10px] uppercase tracking-widest text-muted font-bold mt-1 block">Total payé</span>
       </div>
       <div class="glass-card p-5 text-center">
         <span class="text-2xl font-display font-black text-primary block">{{ paidCount }}</span>
         <span class="text-[10px] uppercase tracking-widest text-muted font-bold mt-1 block">Transactions</span>
+      </div>
+      <div class="glass-card p-5 text-center">
+        <span class="text-2xl font-display font-black text-secondary block">{{ formatPrice(avgAmount) }}</span>
+        <span class="text-[10px] uppercase tracking-widest text-muted font-bold mt-1 block">Moy. ticket</span>
       </div>
     </div>
 
@@ -49,12 +52,12 @@
             </div>
           </div>
           <span :class="['badge', payment.status === 'paid' ? 'badge-paid' : 'badge-unpaid']">
-            {{ payment.status === 'paid' ? 'Paye' : 'Non paye' }}
+            {{ payment.status === 'paid' ? 'Payé' : 'Non payé' }}
           </span>
         </div>
 
         <!-- Details -->
-        <div class="grid grid-cols-2 gap-0 divide-x divide-color">
+        <div class="grid grid-cols-3 gap-0 divide-x divide-color">
           <div class="px-5 py-4">
             <p class="text-[9px] uppercase tracking-widest text-muted font-bold mb-1">Mode de paiement</p>
             <div class="flex items-center gap-2">
@@ -63,8 +66,12 @@
             </div>
           </div>
           <div class="px-5 py-4">
+            <p class="text-[9px] uppercase tracking-widest text-muted font-bold mb-1">Référence</p>
+            <span class="text-xs font-mono text-muted">{{ payment.reference || '—' }}</span>
+          </div>
+          <div class="px-5 py-4">
             <p class="text-[9px] uppercase tracking-widest text-muted font-bold mb-1">Montant</p>
-            <span class="font-display font-black text-2xl text-success">{{ formatPrice(payment.amount) }}</span>
+            <span class="font-display font-black text-xl text-success">{{ formatPrice(payment.amount) }}</span>
           </div>
         </div>
       </div>
@@ -83,22 +90,26 @@ const loading = ref(true);
 
 const formatPrice = (p) => new Intl.NumberFormat('fr-FR').format(p || 0) + ' Ar';
 const formatDate = (d) => new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-const methodLabel = (m) => ({ cash: 'Especes', mobile_money: 'Mobile Money', card: 'Carte' }[m] || (m || 'N/A'));
+const methodLabel = (m) => ({ cash: 'Espèces', mobile_money: 'Mobile Money', card: 'Carte' }[m] || (m || 'N/A'));
 const methodIcon = (m) => ({ cash: '💵', mobile_money: '📱', card: '💳' }[m] || '💰');
 
 const totalPaid = computed(() => payments.value.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0));
 const paidCount = computed(() => payments.value.filter(p => p.status === 'paid').length);
+const avgAmount = computed(() => paidCount.value ? totalPaid.value / paidCount.value : 0);
 
-onMounted(async () => {
+const fetchPayments = async () => {
+  loading.value = true;
   try {
     const { data } = await api.get('/client/payments/history');
     if (data.success) payments.value = data.data.payments;
-  } catch (err) {
+  } catch {
     toast.error('Erreur de chargement');
   } finally {
     loading.value = false;
   }
-});
+};
+
+onMounted(fetchPayments);
 </script>
 
 <style scoped>

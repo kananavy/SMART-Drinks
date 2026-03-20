@@ -26,78 +26,78 @@
       </div>
 
       <!-- ══ TAB: IDENTITÉ ══ -->
-      <div v-show="activeTab === 'identity'" class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div class="glass-card p-8 border-t-4 border-primary">
-          <h2 class="text-lg font-display font-black mb-6 flex items-center gap-2"><span>🏷️</span> IDENTITÉ DU BAR</h2>
-          <div class="space-y-5">
+      <div v-show="activeTab === 'identity'" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="glass-card p-6 border-t-2 border-primary">
+          <h2 class="text-base font-display font-black mb-5 flex items-center gap-2"><span>🏷️</span> IDENTITÉ DU BAR</h2>
+          <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="settings-label">Nom de l'établissement</label>
-                <input v-model="s.bar_name" class="input-premium w-full" />
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Nom de l'établissement</label>
+                <input v-model="s.bar_name" class="input-premium w-full text-xs" />
               </div>
-              <div class="space-y-2">
-                <label class="settings-label">Slogan</label>
-                <input v-model="s.bar_slogan" class="input-premium w-full" placeholder="L'élégance à chaque goutte" />
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Slogan</label>
+                <input v-model="s.bar_slogan" class="input-premium w-full text-xs" placeholder="L'élégance à chaque goutte" />
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="settings-label">Téléphone</label>
-                <input v-model="s.bar_phone" class="input-premium w-full" />
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Téléphone</label>
+                <input v-model="s.bar_phone" class="input-premium w-full text-xs" />
               </div>
-              <div class="space-y-2">
-                <label class="settings-label">Email</label>
-                <input v-model="s.bar_email" class="input-premium w-full" />
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Email</label>
+                <input v-model="s.bar_email" class="input-premium w-full text-xs" />
               </div>
             </div>
-            <div class="space-y-2">
-              <label class="settings-label">Adresse</label>
-              <input v-model="s.bar_address" class="input-premium w-full" />
+            <div class="space-y-1.5">
+              <label class="settings-label text-[10px]">Adresse</label>
+              <input v-model="s.bar_address" class="input-premium w-full text-xs" />
             </div>
 
-            <!-- Logo & Favicon -->
-            <div class="space-y-4">
-              <div class="space-y-2">
-                <label class="settings-label">Logo</label>
+            <!-- Logo & Favicon row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Logo</label>
                 <ImageUploader v-model="s.logo" uploadKey="logo" fieldName="file" compact />
               </div>
-              <div class="space-y-2">
-                <label class="settings-label">Favicon</label>
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Favicon</label>
                 <ImageUploader v-model="s.favicon" uploadKey="favicon" fieldName="file" compact />
               </div>
             </div>
           </div>
         </div>
 
-        <div class="glass-card p-8 border-t-4 border-accent">
-          <h2 class="text-lg font-display font-black mb-6 flex items-center gap-2"><span>⚖️</span> INFOS JURIDIQUES</h2>
+        <div class="glass-card p-6 border-t-2 border-accent">
+          <h2 class="text-base font-display font-black mb-5 flex items-center gap-2"><span>⚖️</span> INFOS JURIDIQUES</h2>
           <div class="space-y-4">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">NIF</label>
+                <input v-model="s.nif" class="input-premium w-full text-xs" />
+              </div>
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">STAT</label>
+                <input v-model="s.stat" class="input-premium w-full text-xs" />
+              </div>
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">RCS</label>
+                <input v-model="s.rcs" class="input-premium w-full text-xs" />
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              <label class="settings-label text-[10px]">En-tête de facture</label>
+              <textarea v-model="s.invoice_header" class="input-premium w-full h-20 resize-none text-xs" placeholder="Texte affiché en haut des factures..."></textarea>
+            </div>
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="settings-label">NIF</label>
-                <input v-model="s.nif" class="input-premium w-full" />
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Devise</label>
+                <input v-model="s.currency" class="input-premium w-full text-xs" placeholder="Ar" />
               </div>
-              <div class="space-y-2">
-                <label class="settings-label">STAT</label>
-                <input v-model="s.stat" class="input-premium w-full" />
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="settings-label">RCS</label>
-              <input v-model="s.rcs" class="input-premium w-full" />
-            </div>
-            <div class="space-y-2">
-              <label class="settings-label">En-tête de facture</label>
-              <textarea v-model="s.invoice_header" class="input-premium w-full h-24 resize-none" placeholder="Texte affiché en haut des factures..."></textarea>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="settings-label">Devise</label>
-                <input v-model="s.currency" class="input-premium w-full" placeholder="Ar" />
-              </div>
-              <div class="space-y-2">
-                <label class="settings-label">Symbole</label>
-                <input v-model="s.currency_symbol" class="input-premium w-full" placeholder="Ar" />
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Symbole</label>
+                <input v-model="s.currency_symbol" class="input-premium w-full text-xs" placeholder="Ar" />
               </div>
             </div>
           </div>
@@ -105,228 +105,197 @@
       </div>
 
       <!-- ══ TAB: PAGE D'ACCUEIL ══ -->
-      <div v-show="activeTab === 'landing'" class="space-y-8">
-        <!-- Hero section -->
-        <div class="glass-card p-8 border-t-4 border-primary">
-          <h2 class="text-lg font-display font-black mb-6 flex items-center gap-2"><span>🎯</span> SECTION HERO</h2>
-          <div class="space-y-5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="settings-label">Texte du badge (ex: OUVERT MAINTENANT)</label>
-                <input v-model="s.hero_badge_text" class="input-premium w-full" />
+      <div v-show="activeTab === 'landing'" class="space-y-6">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <!-- Hero section -->
+          <div class="glass-card p-6 border-t-2 border-primary">
+            <h2 class="text-base font-display font-black mb-5 flex items-center gap-2"><span>🎯</span> SECTION HERO</h2>
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label class="settings-label text-[10px]">Texte du badge</label>
+                  <input v-model="s.hero_badge_text" class="input-premium w-full text-xs" />
+                </div>
+                <div class="space-y-1.5">
+                  <label class="settings-label text-[10px]">Afficher le badge</label>
+                  <div class="flex items-center gap-3 pt-1">
+                    <button @click="toggleBadge"
+                      :class="['w-10 h-5 rounded-full transition-all relative flex-shrink-0', s.hero_badge_show === 'true' ? 'bg-primary' : 'bg-white/10']">
+                      <span :class="['absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all', s.hero_badge_show === 'true' ? 'left-5.5' : 'left-0.5']"></span>
+                    </button>
+                    <span class="text-[10px] font-bold">{{ s.hero_badge_show === 'true' ? 'Visible' : 'Masqué' }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="space-y-2">
-                <label class="settings-label">Afficher le badge</label>
-                <div class="flex items-center gap-3 pt-2">
-                  <button @click="toggleBadge"
-                    :class="['w-12 h-6 rounded-full transition-all relative flex-shrink-0', s.hero_badge_show === 'true' ? 'bg-primary' : 'bg-white/10']">
-                    <span :class="['absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all', s.hero_badge_show === 'true' ? 'left-6' : 'left-0.5']"></span>
-                  </button>
-                  <span class="text-xs font-bold">{{ s.hero_badge_show === 'true' ? 'Visible' : 'Masqué' }}</span>
+
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Description héro</label>
+                <textarea v-model="s.hero_description" class="input-premium w-full h-16 resize-none text-xs" placeholder="Commandez, suivez et payez en temps réel depuis votre table."></textarea>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1.5">
+                  <label class="settings-label text-[10px]">Bouton CTA 1</label>
+                  <input v-model="s.hero_cta1_text" class="input-premium w-full text-xs" placeholder="Réserver ma table" />
+                </div>
+                <div class="space-y-1.5">
+                  <label class="settings-label text-[10px]">Bouton CTA 2</label>
+                  <input v-model="s.hero_cta2_text" class="input-premium w-full text-xs" placeholder="Consulter le menu" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label class="settings-label text-[10px]">Image de fond</label>
+                  <ImageUploader v-model="s.landing_bg_image" uploadKey="landing_bg_image" fieldName="file" compact />
+                </div>
+                <div class="space-y-1.5 flex flex-col justify-end">
+                  <label class="settings-label text-[10px] mb-2">Overlay ({{ s.hero_overlay_opacity }}%)</label>
+                  <input v-model="s.hero_overlay_opacity" type="range" min="0" max="100" class="w-full h-2 accent-primary" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats & How It Works side by side -->
+          <div class="space-y-6">
+            <!-- Stats (compact) -->
+            <div class="glass-card p-6 border-t-2 border-secondary">
+              <h2 class="text-base font-display font-black mb-5 flex items-center gap-2"><span>📊</span> STATISTIQUES HERO</h2>
+              <div class="grid grid-cols-2 gap-4">
+                <div v-for="i in 4" :key="i" class="glass rounded-xl p-3 border border-white/5 space-y-2">
+                  <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1">
+                      <label class="settings-label text-[9px]">Valeur</label>
+                      <input v-model="s[`landing_stat${i}_value`]" class="input-premium w-full p-1 text-center text-[10px] font-bold text-primary" />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="settings-label text-[9px]">Label</label>
+                      <input v-model="s[`landing_stat${i}_label`]" class="input-premium w-full p-1 text-[9px] text-muted" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label class="settings-label">Description héro</label>
-              <input v-model="s.hero_description" class="input-premium w-full" placeholder="Commandez, suivez et payez en temps réel depuis votre table." />
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="settings-label">Bouton CTA 1</label>
-                <input v-model="s.hero_cta1_text" class="input-premium w-full" placeholder="Réserver ma table" />
+            <!-- How it works (compact) -->
+            <div class="glass-card p-6 border-t-2 border-info">
+              <div class="flex items-center justify-between mb-5">
+                <h2 class="text-base font-display font-black flex items-center gap-2"><span>🔢</span> COMMENT ÇA FONCTIONNE</h2>
+                <button @click="s.how_show = s.how_show === 'true' ? 'false' : 'true'"
+                  :class="['w-10 h-5 rounded-full transition-all relative flex-shrink-0', s.how_show === 'true' ? 'bg-primary' : 'bg-white/10']">
+                  <span :class="['absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all', s.how_show === 'true' ? 'left-5.5' : 'left-0.5']"></span>
+                </button>
               </div>
-              <div class="space-y-2">
-                <label class="settings-label">Bouton CTA 2</label>
-                <input v-model="s.hero_cta2_text" class="input-premium w-full" placeholder="Consulter le menu" />
-              </div>
-            </div>
-
-            <!-- Background image with preview -->
-            <div class="space-y-2">
-              <label class="settings-label">Image de fond</label>
-              <ImageUploader v-model="s.landing_bg_image" uploadKey="landing_bg_image" fieldName="file" />
-            </div>
-
-            <div class="space-y-2">
-              <label class="settings-label">Opacité de l'overlay ({{ s.hero_overlay_opacity }}%)</label>
-              <input v-model="s.hero_overlay_opacity" type="range" min="0" max="100" class="w-full accent-primary" />
-              <div class="flex justify-between text-[9px] text-muted font-bold">
-                <span>0% (transparent)</span><span>50%</span><span>100% (opaque)</span>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div v-for="i in 3" :key="i" class="glass rounded-xl p-3 border border-white/5 space-y-2">
+                  <div class="flex justify-between items-start">
+                    <span class="text-[8px] font-black uppercase text-muted">Étape {{ i }}</span>
+                    <input v-model="s[`step${i}_icon`]" class="w-6 h-6 bg-transparent text-center text-sm border-none outline-none" maxlength="4" />
+                  </div>
+                  <input v-model="s[`step${i}_title`]" class="input-premium w-full p-1 text-[10px] font-bold" />
+                  <input v-model="s[`step${i}_desc`]" class="input-premium w-full p-1 text-[9px] text-muted" />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Stats -->
-        <div class="glass-card p-8 border-t-4 border-secondary">
-          <h2 class="text-lg font-display font-black mb-6 flex items-center gap-2"><span>📊</span> STATISTIQUES HERO</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div v-for="i in 4" :key="i" class="space-y-3">
-              <div class="glass rounded-xl p-3 text-center border border-white/5">
-                <span class="text-xl font-display font-black text-primary">{{ s[`landing_stat${i}_value`] || '—' }}</span>
-                <span class="block text-[9px] text-muted uppercase tracking-widest mt-0.5">{{ s[`landing_stat${i}_label`] || '—' }}</span>
-              </div>
-              <div class="space-y-2">
-                <label class="settings-label">Valeur</label>
-                <input v-model="s[`landing_stat${i}_value`]" class="input-premium w-full" :placeholder="['50+', '100%', '24/7', '5★'][i-1]" />
-              </div>
-              <div class="space-y-2">
-                <label class="settings-label">Label</label>
-                <input v-model="s[`landing_stat${i}_label`]" class="input-premium w-full" :placeholder="['Boissons', 'Satisfaction', 'Service', 'Note'][i-1]" />
-              </div>
+        <!-- Features (Points Forts) in a wide card but compact layout -->
+        <div class="glass-card p-6 border-t-2 border-accent">
+          <h2 class="text-base font-display font-black mb-5 flex items-center gap-2"><span>✨</span> POINTS FORTS</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div v-for="i in 6" :key="i" class="glass rounded-xl p-3 border border-white/5 space-y-2 text-center">
+              <input v-model="s[`landing_feat${i}_icon`]" class="w-8 h-8 bg-white/5 rounded-lg text-center text-lg mx-auto mb-1 border-none outline-none" maxlength="4" />
+              <input v-model="s[`landing_feat${i}_title`]" class="input-premium w-full p-1 text-center text-[10px] font-bold" />
+              <input v-model="s[`landing_feat${i}_desc`]" class="input-premium w-full p-1 text-center text-[9px] text-muted" />
             </div>
           </div>
         </div>
 
-        <!-- Features -->
-        <div class="glass-card p-8 border-t-4 border-accent">
-          <h2 class="text-lg font-display font-black mb-6 flex items-center gap-2"><span>✨</span> POINTS FORTS</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div v-for="i in 6" :key="i" class="glass rounded-2xl p-5 border border-white/5 space-y-3">
-              <div class="flex items-center gap-3">
-                <span class="text-3xl">{{ s[`landing_feat${i}_icon`] || '⭐' }}</span>
-                <span class="font-bold text-sm truncate">{{ s[`landing_feat${i}_title`] || `Fonctionnalité ${i}` }}</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Pricing section -->
+          <div class="glass-card p-6 border-t-2 border-warning">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-display font-black flex items-center gap-2"><span>💰</span> SECTION TARIFS</h2>
+              <button @click="s.pricing_show = s.pricing_show === 'true' ? 'false' : 'true'"
+                :class="['w-10 h-5 rounded-full transition-all relative flex-shrink-0', s.pricing_show === 'true' ? 'bg-primary' : 'bg-white/10']">
+                <span :class="['absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all', s.pricing_show === 'true' ? 'left-5.5' : 'left-0.5']"></span>
+              </button>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-1.5">
+                <label class="settings-label text-[9px]">Titre</label>
+                <input v-model="s.pricing_title" class="input-premium w-full text-xs" />
               </div>
-              <div class="grid grid-cols-3 gap-2">
-                <div class="space-y-1">
-                  <label class="settings-label">Icône</label>
-                  <input v-model="s[`landing_feat${i}_icon`]" class="input-premium w-full text-center text-lg" maxlength="4" />
-                </div>
-                <div class="space-y-1 col-span-2">
-                  <label class="settings-label">Titre</label>
-                  <input v-model="s[`landing_feat${i}_title`]" class="input-premium w-full" />
-                </div>
-              </div>
-              <div class="space-y-1">
-                <label class="settings-label">Description</label>
-                <input v-model="s[`landing_feat${i}_desc`]" class="input-premium w-full" />
+              <div class="space-y-1.5">
+                <label class="settings-label text-[9px]">Sous-titre</label>
+                <input v-model="s.pricing_subtitle" class="input-premium w-full text-xs" />
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- How it works -->
-        <div class="glass-card p-8 border-t-4 border-primary">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-display font-black flex items-center gap-2"><span>🔢</span> COMMENT ÇA FONCTIONNE</h2>
-            <button @click="s.how_show = s.how_show === 'true' ? 'false' : 'true'"
-              :class="['w-12 h-6 rounded-full transition-all relative flex-shrink-0', s.how_show === 'true' ? 'bg-primary' : 'bg-white/10']">
-              <span :class="['absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all', s.how_show === 'true' ? 'left-6' : 'left-0.5']"></span>
-            </button>
-          </div>
-          <div class="space-y-4 mb-6">
-            <div class="space-y-2">
-              <label class="settings-label">Titre de la section</label>
-              <input v-model="s.how_title" class="input-premium w-full" placeholder="Comment ça fonctionne" />
+          <!-- Footer section -->
+          <div class="glass-card p-6 border-t-2 border-secondary flex flex-col justify-center">
+            <h2 class="text-base font-display font-black mb-4 flex items-center gap-2"><span>🔗</span> FOOTER</h2>
+            <div class="space-y-1.5">
+              <label class="settings-label text-[9px]">Tagline du footer</label>
+              <input v-model="s.landing_footer_tagline" class="input-premium w-full text-xs" placeholder="L'expérience bar réinventée." />
             </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div v-for="i in 3" :key="i" class="glass rounded-2xl p-4 border border-white/5 space-y-3">
-              <p class="text-[9px] font-black uppercase tracking-widest text-muted">Étape {{ i }}</p>
-              <div class="grid grid-cols-3 gap-2">
-                <div class="space-y-1">
-                  <label class="settings-label">Icône</label>
-                  <input v-model="s[`step${i}_icon`]" class="input-premium w-full text-center text-lg" maxlength="4" />
-                </div>
-                <div class="space-y-1 col-span-2">
-                  <label class="settings-label">Titre</label>
-                  <input v-model="s[`step${i}_title`]" class="input-premium w-full" />
-                </div>
-              </div>
-              <div class="space-y-1">
-                <label class="settings-label">Description</label>
-                <input v-model="s[`step${i}_desc`]" class="input-premium w-full" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pricing section -->
-        <div class="glass-card p-8 border-t-4 border-accent">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-display font-black flex items-center gap-2"><span>💰</span> SECTION TARIFS</h2>
-            <button @click="s.pricing_show = s.pricing_show === 'true' ? 'false' : 'true'"
-              :class="['w-12 h-6 rounded-full transition-all relative flex-shrink-0', s.pricing_show === 'true' ? 'bg-primary' : 'bg-white/10']">
-              <span :class="['absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all', s.pricing_show === 'true' ? 'left-6' : 'left-0.5']"></span>
-            </button>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label class="settings-label">Titre</label>
-              <input v-model="s.pricing_title" class="input-premium w-full" placeholder="Nos offres" />
-            </div>
-            <div class="space-y-2">
-              <label class="settings-label">Sous-titre</label>
-              <input v-model="s.pricing_subtitle" class="input-premium w-full" placeholder="Choisissez le plan adapté à votre établissement." />
-            </div>
-          </div>
-          <p class="text-[10px] text-muted mt-4">Les plans affichés (Starter, Pro, Enterprise) sont définis dans <strong>Plans & Licences</strong>.</p>
-        </div>
-
-        <!-- Footer -->
-        <div class="glass-card p-8 border-t-4 border-info">
-          <h2 class="text-lg font-display font-black mb-6 flex items-center gap-2"><span>🔗</span> FOOTER</h2>
-          <div class="space-y-2">
-            <label class="settings-label">Tagline du footer</label>
-            <input v-model="s.landing_footer_tagline" class="input-premium w-full" placeholder="L'expérience bar réinventée." />
           </div>
         </div>
       </div>
 
       <!-- ══ TAB: APPARENCE ══ -->
-      <div v-show="activeTab === 'appearance'" class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div class="glass-card p-8 border-t-4 border-secondary">
-          <h2 class="text-lg font-display font-black mb-6 flex items-center gap-2"><span>🎨</span> COULEURS & THÈME</h2>
-          <div class="space-y-6">
-            <div class="grid grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="settings-label">Couleur Primaire</label>
+      <div v-show="activeTab === 'appearance'" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="glass-card p-6 border-t-2 border-secondary">
+          <h2 class="text-base font-display font-black mb-5 flex items-center gap-2"><span>🎨</span> COULEURS & THÈME</h2>
+          <div class="space-y-5">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Primaire</label>
                 <div class="flex gap-2 items-center">
-                  <input v-model="s.primary_color" type="color" class="w-12 h-10 rounded-lg border-none cursor-pointer bg-transparent" />
-                  <input v-model="s.primary_color" class="input-premium flex-1 font-mono" />
+                  <input v-model="s.primary_color" type="color" class="w-10 h-8 rounded-lg border-none cursor-pointer bg-transparent" />
+                  <input v-model="s.primary_color" class="input-premium flex-1 font-mono text-xs" />
                 </div>
-                <div class="h-2 rounded-full mt-2 transition-all" :style="{ background: s.primary_color }"></div>
               </div>
-              <div class="space-y-2">
-                <label class="settings-label">Couleur Secondaire</label>
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Secondaire</label>
                 <div class="flex gap-2 items-center">
-                  <input v-model="s.secondary_color" type="color" class="w-12 h-10 rounded-lg border-none cursor-pointer bg-transparent" />
-                  <input v-model="s.secondary_color" class="input-premium flex-1 font-mono" />
+                  <input v-model="s.secondary_color" type="color" class="w-10 h-8 rounded-lg border-none cursor-pointer bg-transparent" />
+                  <input v-model="s.secondary_color" class="input-premium flex-1 font-mono text-xs" />
                 </div>
-                <div class="h-2 rounded-full mt-2 transition-all" :style="{ background: s.secondary_color }"></div>
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="settings-label">Police de caractères</label>
-                <select v-model="s.font_family" class="input-premium w-full">
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Police</label>
+                <select v-model="s.font_family" class="input-premium w-full text-xs">
                   <option value="'Outfit', sans-serif">Modern (Outfit)</option>
                   <option value="'Inter', sans-serif">Sleek (Inter)</option>
                   <option value="'Space Grotesk', sans-serif">Tech (Space)</option>
                   <option value="system-ui">Classic System</option>
                 </select>
               </div>
-              <div class="space-y-2">
-                <label class="settings-label">Taille de base</label>
-                <select v-model="s.base_font_size" class="input-premium w-full">
-                  <option value="12px">Compacte (12px)</option>
-                  <option value="14px">Standard (14px)</option>
-                  <option value="16px">Confort (16px)</option>
+              <div class="space-y-1.5">
+                <label class="settings-label text-[10px]">Taille base</label>
+                <select v-model="s.base_font_size" class="input-premium w-full text-xs">
+                  <option value="12px">12px</option>
+                  <option value="14px">14px</option>
+                  <option value="16px">16px</option>
                 </select>
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label class="settings-label">Ambiance Arrière-plan</label>
-              <div class="grid grid-cols-3 gap-3">
+            <div class="space-y-1.5">
+              <label class="settings-label text-[10px]">Style d'Arrière-plan</label>
+              <div class="grid grid-cols-3 gap-2">
                 <div v-for="bg in bgOptions" :key="bg.val" @click="s.bg_style = bg.val"
-                  :class="['h-16 rounded-xl border cursor-pointer transition-all flex items-end p-2',
-                           s.bg_style === bg.val ? 'border-primary shadow-glow' : 'border-color hover:border-white/20']"
+                  :class="['h-12 rounded-xl border cursor-pointer transition-all flex items-center justify-center',
+                           s.bg_style === bg.val ? 'border-primary bg-primary/10' : 'border-white/5 hover:border-white/10']"
                   :style="{ background: bg.preview }">
-                  <span :class="['text-[9px] font-black uppercase tracking-widest', s.bg_style === bg.val ? 'text-primary' : 'text-muted']">{{ bg.label }}</span>
+                  <span class="text-[9px] font-black uppercase tracking-widest text-white">{{ bg.label }}</span>
                 </div>
               </div>
             </div>
@@ -334,73 +303,59 @@
         </div>
 
         <!-- Preview -->
-        <div class="glass-card p-8 border-t-4 border-primary flex flex-col">
-          <h2 class="text-lg font-display font-black mb-6 flex items-center gap-2"><span>👁️</span> APERÇU EN DIRECT</h2>
-          <div class="flex-1 rounded-2xl overflow-hidden border border-white/10 p-6 flex flex-col gap-4 min-h-[260px]" :style="{ background: bgPreview, fontFamily: s.font_family }">
-            <!-- Mini nav -->
-            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div class="glass-card p-6 border-t-2 border-primary flex flex-col">
+          <h2 class="text-base font-display font-black mb-5 flex items-center gap-2"><span>👁️</span> APERÇU EN DIRECT</h2>
+          <div class="flex-1 rounded-2xl overflow-hidden border border-white/5 p-4 flex flex-col gap-3 min-h-[200px]" :style="{ background: bgPreview, fontFamily: s.font_family }">
+            <div class="flex items-center justify-between pb-2 border-b border-white/5">
               <div class="flex items-center gap-2">
-                <img v-if="s.logo" :src="s.logo" class="h-6 object-contain" />
-                <span v-else class="text-lg">🍸</span>
-                <span class="font-black text-sm uppercase" :style="{ color: s.primary_color }">{{ s.bar_name || 'LE BAR' }}</span>
+                <img v-if="s.logo" :src="s.logo" class="h-5 object-contain" />
+                <span v-else class="text-base">🍸</span>
+                <span class="font-black text-xs uppercase" :style="{ color: s.primary_color }">{{ s.bar_name || 'BAR' }}</span>
               </div>
-              <div class="flex gap-1">
-                <div class="w-12 h-5 rounded-md border border-white/20 bg-white/5"></div>
-                <div class="w-14 h-5 rounded-md text-[9px] font-black text-white flex items-center justify-center" :style="{ background: s.primary_color }">CTA</div>
-              </div>
+              <div class="w-10 h-4 rounded text-[8px] font-black text-white flex items-center justify-center" :style="{ background: s.primary_color }">CTA</div>
             </div>
-            <!-- Mini content -->
-            <div class="space-y-2 flex-1">
-              <div class="h-4 rounded-full w-3/4" :style="{ background: s.primary_color, opacity: 0.75 }"></div>
-              <div class="h-3 rounded-full w-2/3" :style="{ background: s.secondary_color, opacity: 0.5 }"></div>
-              <div class="h-3 rounded-full w-1/2 bg-white/10"></div>
+            <div class="space-y-1.5 flex-1">
+              <div class="h-3 rounded-full w-3/4" :style="{ background: s.primary_color, opacity: 0.7 }"></div>
+              <div class="h-2 rounded-full w-1/2 bg-white/5"></div>
             </div>
             <div class="flex gap-2">
-              <div class="px-4 py-2 rounded-lg text-xs font-black text-white" :style="{ background: s.primary_color }">Primaire</div>
-              <div class="px-4 py-2 rounded-lg text-xs font-black text-white" :style="{ background: s.secondary_color }">Secondaire</div>
+              <div class="px-3 py-1.5 rounded-lg text-[9px] font-black text-white" :style="{ background: s.primary_color }">Primary</div>
+              <div class="px-3 py-1.5 rounded-lg text-[9px] font-black text-white" :style="{ background: s.secondary_color }">Secondary</div>
             </div>
-          </div>
-          <!-- Color swatch row -->
-          <div class="flex gap-2 mt-4">
-            <div class="flex-1 h-8 rounded-xl" :style="{ background: s.primary_color }"></div>
-            <div class="flex-1 h-8 rounded-xl" :style="{ background: s.secondary_color }"></div>
-            <div class="w-8 h-8 rounded-xl bg-accent"></div>
-            <div class="w-8 h-8 rounded-xl bg-success"></div>
-            <div class="w-8 h-8 rounded-xl bg-danger"></div>
           </div>
         </div>
       </div>
 
       <!-- ══ TAB: FACTURATION ══ -->
-      <div v-show="activeTab === 'billing'" class="glass-card p-8 border-t-4 border-accent max-w-2xl">
-        <h2 class="text-lg font-display font-black mb-6 flex items-center gap-2"><span>🧾</span> PARAMÈTRES DE FACTURATION</h2>
+      <div v-show="activeTab === 'billing'" class="glass-card p-6 border-t-2 border-accent max-w-xl">
+        <h2 class="text-base font-display font-black mb-5 flex items-center gap-2"><span>🧾</span> PARAMÈTRES DE FACTURATION</h2>
         <div class="space-y-4">
+          <div class="grid grid-cols-3 gap-3">
+            <div class="space-y-1.5">
+              <label class="settings-label text-[10px]">NIF</label>
+              <input v-model="s.nif" class="input-premium w-full text-xs" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="settings-label text-[10px]">STAT</label>
+              <input v-model="s.stat" class="input-premium w-full text-xs" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="settings-label text-[10px]">RCS</label>
+              <input v-model="s.rcs" class="input-premium w-full text-xs" />
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <label class="settings-label text-[10px]">En-tête de facture</label>
+            <textarea v-model="s.invoice_header" class="input-premium w-full h-24 resize-none text-xs" placeholder="Ce texte sera affiché en haut des factures..."></textarea>
+          </div>
           <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label class="settings-label">NIF</label>
-              <input v-model="s.nif" class="input-premium w-full" />
+            <div class="space-y-1.5">
+              <label class="settings-label text-[10px]">Devise</label>
+              <input v-model="s.currency" class="input-premium w-full text-xs" />
             </div>
-            <div class="space-y-2">
-              <label class="settings-label">STAT</label>
-              <input v-model="s.stat" class="input-premium w-full" />
-            </div>
-          </div>
-          <div class="space-y-2">
-            <label class="settings-label">RCS</label>
-            <input v-model="s.rcs" class="input-premium w-full" />
-          </div>
-          <div class="space-y-2">
-            <label class="settings-label">En-tête de facture</label>
-            <textarea v-model="s.invoice_header" class="input-premium w-full h-28 resize-none" placeholder="Ce texte sera affiché en haut de toutes les factures PDF..."></textarea>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label class="settings-label">Devise</label>
-              <input v-model="s.currency" class="input-premium w-full" placeholder="Ariary" />
-            </div>
-            <div class="space-y-2">
-              <label class="settings-label">Symbole</label>
-              <input v-model="s.currency_symbol" class="input-premium w-full" placeholder="Ar" />
+            <div class="space-y-1.5">
+              <label class="settings-label text-[10px]">Symbole</label>
+              <input v-model="s.currency_symbol" class="input-premium w-full text-xs" />
             </div>
           </div>
         </div>
@@ -408,69 +363,47 @@
 
       <!-- ══ TAB: PLANS & LICENCES ══ -->
       <div v-show="activeTab === 'plans'" class="space-y-6">
-        <div class="glass-card p-8 border-t-4 border-primary flex flex-col md:flex-row items-start md:items-center gap-6 justify-between">
+        <div class="glass-card p-6 border-t-2 border-primary flex flex-col md:flex-row items-start md:items-center gap-5 justify-between">
           <div>
-            <h2 class="text-lg font-display font-black mb-1 flex items-center gap-2"><span>👑</span> GESTION DES PLANS</h2>
-            <p class="text-secondary text-sm">Gérez votre abonnement, activez des licences et contrôlez les fonctionnalités disponibles.</p>
+            <h2 class="text-base font-display font-black mb-1 flex items-center gap-2"><span>👑</span> GESTION DES PLANS</h2>
+            <p class="text-secondary text-xs">Gérez votre abonnement et activez des licences.</p>
           </div>
           <router-link to="/admin/plans"
-            class="btn btn-primary px-8 py-3 font-black tracking-widest uppercase flex items-center gap-2 whitespace-nowrap">
+            class="btn btn-primary px-6 py-2.5 font-black tracking-widest uppercase text-xs flex items-center gap-2">
             <span>👑</span> Gérer les plans
           </router-link>
         </div>
 
-        <!-- Quick plan status -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div class="glass-card p-6">
-            <p class="text-[9px] font-black uppercase tracking-widest text-muted mb-3">Plan actif</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="glass-card p-4">
+            <p class="text-[8px] font-black uppercase text-muted mb-2">Plan actif</p>
             <div class="flex items-center gap-3">
-              <span class="text-3xl">{{ planStore.plan.icon }}</span>
-              <div>
-                <p class="font-black text-lg" :style="{ color: planStore.plan.color }">{{ planStore.plan.name }}</p>
-                <p class="text-[10px] text-muted">{{ planStore.plan.description }}</p>
-              </div>
+              <span class="text-2xl">{{ planStore.plan.icon }}</span>
+              <p class="font-black text-sm" :style="{ color: planStore.plan.color }">{{ planStore.plan.name }}</p>
             </div>
           </div>
-          <div class="glass-card p-6">
-            <p class="text-[9px] font-black uppercase tracking-widest text-muted mb-3">Statut</p>
-            <div class="flex items-center gap-2">
-              <div :class="['w-3 h-3 rounded-full', planStore.isActive ? 'bg-success animate-pulse' : 'bg-danger']"></div>
-              <span class="font-black text-sm">{{ planStore.statusLabel }}</span>
-            </div>
-            <p v-if="planStore.daysRemaining !== null" class="text-xs text-muted mt-2">
-              {{ planStore.daysRemaining > 0 ? `Expire dans ${planStore.daysRemaining} jour(s)` : 'Expiré' }}
-            </p>
+          <div class="glass-card p-4 text-center">
+            <p class="text-[8px] font-black uppercase text-muted mb-2">Statut</p>
+            <span class="font-black text-sm">{{ planStore.statusLabel }}</span>
           </div>
-          <div class="glass-card p-6">
-            <p class="text-[9px] font-black uppercase tracking-widest text-muted mb-3">Fonctionnalités</p>
-            <p class="text-3xl font-display font-black" :style="{ color: planStore.plan.color }">{{ planStore.plan.features.length }}</p>
-            <p class="text-[10px] text-muted mt-1">actives sur ce plan</p>
+          <div class="glass-card p-4 text-center">
+            <p class="text-[8px] font-black uppercase text-muted mb-2">Features</p>
+            <p class="text-xl font-display font-black text-primary">{{ planStore.plan.features.length }}</p>
           </div>
-        </div>
-
-        <div class="glass-card p-6 border border-warning/20">
-          <p class="text-xs font-bold text-warning flex items-center gap-2">
-            <span>💡</span>
-            La section Plans & Licences n'est pas affectée par le bouton "Sauvegarder" ci-dessous. Les modifications de plan sont enregistrées directement depuis la page dédiée.
-          </p>
         </div>
       </div>
 
       <!-- Save Button -->
-      <div class="mt-10 flex items-center gap-4 flex-wrap" v-show="activeTab !== 'plans'">
+      <div class="mt-8 flex items-center gap-4 flex-wrap" v-show="activeTab !== 'plans'">
         <button @click="saveSettings" :disabled="saving"
-          class="btn btn-primary py-4 px-12 text-base font-black tracking-widest shadow-glow uppercase flex gap-3">
+          class="btn btn-primary py-3 px-10 text-sm font-black tracking-widest shadow-glow uppercase flex gap-3">
           <span v-if="saving" class="animate-spin">🔄</span>
           <span v-else>💾</span>
-          {{ saving ? 'SYNCHRONISATION...' : 'SAUVEGARDER' }}
+          {{ saving ? 'SAUVEGARDE...' : 'SAUVEGARDER LES CHANGEMENTS' }}
         </button>
-        <div v-if="saveSuccess" class="glass p-3 rounded-xl border border-success/20 flex items-center gap-2 animate-fade-in">
-          <div class="w-2 h-2 rounded-full bg-success"></div>
-          <span class="text-[10px] font-bold text-success uppercase tracking-widest">Sauvegardé avec succès</span>
-        </div>
-        <div v-else class="glass p-3 rounded-xl border border-white/5 flex items-center gap-2">
-          <div class="w-2 h-2 rounded-full bg-muted"></div>
-          <span class="text-[10px] font-bold text-muted uppercase tracking-widest">Non sauvegardé</span>
+        <div v-if="saveSuccess" class="glass p-2.5 rounded-xl border border-success/20 flex items-center gap-2">
+          <div class="w-1.5 h-1.5 rounded-full bg-success"></div>
+          <span class="text-[9px] font-bold text-success uppercase">Succès</span>
         </div>
       </div>
     </div>

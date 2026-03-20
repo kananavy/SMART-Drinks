@@ -197,4 +197,41 @@ router.put('/orders/:id', async (req, res) => {
     }
 });
 
+// ── Cancel Order ──
+router.put('/orders/:id/cancel', async (req, res) => {
+    try {
+        const order = await Order.findByPk(req.params.id, {
+            include: [{ model: OrderItem, as: 'items', include: [Product] }],
+        });
+
+        if (!order) return error(res, 'Commande non trouvée', 404);
+        if (['paid', 'cancelled', 'validated'].includes(order.status)) {
+            return error(res, 'Cette commande ne peut plus être annulée', 400);
+        }
+
+        // Restore stock if confirmed
+        if (order.status === 'confirmed') {
+            for (const item of order.items) {
+                await Product.increment('stock_quantity', {
+                    by: item.quantity,
+                    where: { id: item.product_id },
+                });
+            }
+        }
+
+        order.status = 'cancelled';
+        await order.save();
+
+        const io = req.app.get('io');
+        io.emit('order-status-update', { orderId: order.id, status: 'cancelled' });
+
+        await logActivity(req.userId, 'ORDER_CANCEL', `Commande ${order.order_number} annulée`, req.ip);
+
+        return success(res, { order }, 'Commande annulée');
+    } catch (err) {
+        console.error('Cancel error:', err);
+        return error(res, 'Erreur lors de l\'annulation');
+    }
+});
+
 module.exports = router;

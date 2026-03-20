@@ -3,11 +3,10 @@ const { Op, fn, col, literal } = require('sequelize');
 const {
     User, Category, Product, Order, OrderItem,
     Payment, StockEntry, Setting, ActivityLog, ClientSession,
-    Permission, UserPermission
+    Permission, UserPermission, RolePermission
 } = require('../models');
 const auth = require('../middleware/auth');
-const role = require('../middleware/role');
-const { checkPermission } = require('../middleware/permission');
+const { canDo, isSuperAdmin } = require('../middleware/permission');
 const { success, error, paginate } = require('../utils/response');
 const logActivity = require('../utils/logActivity');
 const multer = require('multer');
@@ -17,8 +16,8 @@ const InvoiceService = require('../services/invoiceService');
 // File upload setup
 // ... (multer config)
 
-// Permissions routes
-router.get('/permissions', auth, role('superadmin'), async (req, res) => {
+// Permissions routes (superadmin only)
+router.get('/permissions', auth, isSuperAdmin, async (req, res) => {
     try {
         const permissions = await Permission.findAll({
             order: [['category', 'ASC'], ['name', 'ASC']]
@@ -29,7 +28,26 @@ router.get('/permissions', auth, role('superadmin'), async (req, res) => {
     }
 });
 
-router.get('/users/:id/permissions', auth, role('superadmin'), async (req, res) => {
+router.post('/permissions', auth, isSuperAdmin, async (req, res) => {
+    try {
+        const { name, label, category } = req.body;
+        if (!name || !label || !category) {
+            return error(res, 'Champs requis manquants', 400);
+        }
+        const existing = await Permission.findOne({ where: { name } });
+        if (existing) {
+            return error(res, 'Une permission avec ce nom existe déjà', 409);
+        }
+        const permission = await Permission.create({ name, label, category });
+        await logActivity(req.userId, 'PERMISSION_CREATE', `Permission créée: ${label}`, req.ip);
+        return success(res, { permission }, 'Permission créée', 201);
+    } catch (err) {
+        console.error(err);
+        return error(res, 'Erreur lors de la création de la permission');
+    }
+});
+
+router.get('/users/:id/permissions', auth, isSuperAdmin, async (req, res) => {
     try {
         const permissions = await Permission.findAll({
             include: [{
@@ -56,7 +74,7 @@ router.get('/users/:id/permissions', auth, role('superadmin'), async (req, res) 
     }
 });
 
-router.post('/users/:id/permissions/toggle', auth, role('superadmin'), async (req, res) => {
+router.post('/users/:id/permissions/toggle', auth, isSuperAdmin, async (req, res) => {
     try {
         const { permission_id, granted } = req.body;
         const [up, created] = await UserPermission.findOrCreate({
@@ -73,6 +91,90 @@ router.post('/users/:id/permissions/toggle', auth, role('superadmin'), async (re
     }
 });
 
+
+// ─── Role-level Permission Routes ──────────────────────────────────────────────
+
+const ROLE_DEFAULTS = {
+    vendeur: ['orders.view', 'orders.create', 'products.view', 'stock.view'],
+    caissier: ['orders.view', 'payments.manage', 'payments.view'],
+    admin: [
+      'orders.view', 'orders.create', 'orders.confirm', 'orders.validate',
+      'payments.view', 'payments.manage',
+      'users.view', 'users.create', 'users.edit',
+      'products.view', 'products.create', 'products.edit', 'products.delete',
+      'categories.view', 'categories.create', 'categories.edit',
+      'stock.view', 'stock.manage',
+      'stats.view', 'settings.view',
+    ],
+    superadmin: [], // Superadmin will be handled separately
+};
+
+// GET /admin/roles/:role/permissions — list all permissions with granted state for this role
+router.get('/roles/:role/permissions', auth, isSuperAdmin, async (req, res) => {
+    try {
+        const { role: targetRole } = req.params;
+        if (!['vendeur', 'caissier', 'superadmin', 'admin'].includes(targetRole)) {
+            return error(res, 'Rôle invalide', 400);
+        }
+
+        // For superadmin, all permissions are granted
+        const allPermissions = await Permission.findAll({ order: [['category', 'ASC'], ['name', 'ASC']] });
+        if (targetRole === 'superadmin') {
+            const result = allPermissions.map(p => ({ ...p.get(), granted: true }));
+            return success(res, { role: targetRole, permissions: result });
+        }
+
+        // Load DB overrides for this role
+        const dbPerms = await RolePermission.findAll({ where: { role: targetRole } });
+        const dbMap = {};
+        dbPerms.forEach(p => { dbMap[p.permission_name] = p.granted; });
+
+        const defaults = ROLE_DEFAULTS[targetRole] || [];
+        const result = allPermissions.map(p => ({
+            name: p.name,
+            label: p.label,
+            category: p.category,
+            // DB override takes priority, else use role default
+            granted: dbMap.hasOwnProperty(p.name) ? dbMap[p.name] : defaults.includes(p.name),
+            overridden: dbMap.hasOwnProperty(p.name),
+        }));
+
+        return success(res, { role: targetRole, permissions: result });
+    } catch (err) {
+        console.error(err);
+        return error(res, 'Erreur');
+    }
+});
+
+// POST /admin/roles/:role/permissions/bulk — save role permissions
+router.post('/roles/:role/permissions/bulk', auth, isSuperAdmin, async (req, res) => {
+    try {
+        const { role: targetRole } = req.params;
+        if (!['vendeur', 'caissier', 'admin'].includes(targetRole)) {
+            return error(res, 'Rôle invalide (superadmin a toujours toutes les permissions)', 400);
+        }
+
+        const { permissions } = req.body; // [{ name, granted }]
+        if (!Array.isArray(permissions)) return error(res, 'Format invalide', 400);
+
+        // Upsert each permission for this role
+        for (const perm of permissions) {
+            await RolePermission.upsert({ role: targetRole, permission_name: perm.name, granted: perm.granted });
+        }
+
+        await logActivity(req.userId, 'ROLE_PERMISSIONS', `Permissions du rôle ${targetRole} mises à jour`, req.ip);
+        return success(res, {}, 'Permissions du rôle mises à jour');
+    } catch (err) {
+        console.error(err);
+        return error(res, 'Erreur');
+    }
+});
+
+// GET /admin/all-permissions — list of all available permission definitions
+router.get('/all-permissions', auth, isSuperAdmin, async (req, res) => {
+    const permissions = await Permission.findAll({ order: [['category', 'ASC'], ['name', 'ASC']] });
+    return success(res, { permissions });
+});
 
 // File upload setup
 const storage = multer.diskStorage({
@@ -91,18 +193,24 @@ const upload = multer({
     },
 });
 
+// All routes below require authentication
 router.use(auth);
-router.use(role('superadmin'));
 
 // ════════════════════════
 // USER MANAGEMENT
 // ════════════════════════
 
-router.get('/users', async (req, res) => {
+router.get('/users', canDo('view-users'), async (req, res) => {
     try {
-        const { role: roleFilter, page = 1, limit = 20 } = req.query;
-        const where = {};
+        const { role: roleFilter, page = 1, limit = 20, search = '' } = req.query;
+        const where = { role: ['vendeur', 'caissier', 'admin', 'superadmin'] };
         if (roleFilter) where.role = roleFilter;
+        if (search) {
+            where[Op.or] = [
+                { name: { [Op.like]: `%${search}%` } },
+                { email: { [Op.like]: `%${search}%` } },
+            ];
+        }
 
         const { count, rows } = await User.findAndCountAll({
             where,
@@ -117,7 +225,7 @@ router.get('/users', async (req, res) => {
     }
 });
 
-router.post('/users', async (req, res) => {
+router.post('/users', canDo('create-users'), async (req, res) => {
     try {
         const { name, email, password, phone, role: userRole } = req.body;
         if (!name || !email || !password || !userRole) {
@@ -137,7 +245,7 @@ router.post('/users', async (req, res) => {
     }
 });
 
-router.put('/users/:id', async (req, res) => {
+router.put('/users/:id', canDo('edit-users'), async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
         if (!user) return error(res, 'Utilisateur non trouvé', 404);
@@ -158,7 +266,7 @@ router.put('/users/:id', async (req, res) => {
     }
 });
 
-router.delete('/users/:id', async (req, res) => {
+router.delete('/users/:id', canDo('delete-users'), async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
         if (!user) return error(res, 'Utilisateur non trouvé', 404);
@@ -175,7 +283,7 @@ router.delete('/users/:id', async (req, res) => {
 // CATEGORY MANAGEMENT
 // ════════════════════════
 
-router.get('/categories', async (req, res) => {
+router.get('/categories', canDo('view-categories'), async (req, res) => {
     try {
         const categories = await Category.findAll({
             order: [['sort_order', 'ASC']],
@@ -187,7 +295,7 @@ router.get('/categories', async (req, res) => {
     }
 });
 
-router.post('/categories', async (req, res) => {
+router.post('/categories', canDo('create-categories'), async (req, res) => {
     try {
         const { name, icon, sort_order, packaging_type } = req.body;
         if (!name) return error(res, 'Nom requis', 400);
@@ -203,7 +311,7 @@ router.post('/categories', async (req, res) => {
     }
 });
 
-router.put('/categories/:id', async (req, res) => {
+router.put('/categories/:id', canDo('edit-categories'), async (req, res) => {
     try {
         const category = await Category.findByPk(req.params.id);
         if (!category) return error(res, 'Non trouvé', 404);
@@ -220,7 +328,7 @@ router.put('/categories/:id', async (req, res) => {
 });
 
 // Upload category image
-router.post('/categories/:id/image', upload.single('image'), async (req, res) => {
+router.post('/categories/:id/image', canDo('edit-categories'), upload.single('image'), async (req, res) => {
     try {
         const category = await Category.findByPk(req.params.id);
         if (!category) return error(res, 'Non trouvé', 404);
@@ -235,7 +343,7 @@ router.post('/categories/:id/image', upload.single('image'), async (req, res) =>
     }
 });
 
-router.delete('/categories/:id', async (req, res) => {
+router.delete('/categories/:id', canDo('delete-categories'), async (req, res) => {
     try {
         const category = await Category.findByPk(req.params.id);
         if (!category) return error(res, 'Non trouvé', 404);
@@ -250,7 +358,7 @@ router.delete('/categories/:id', async (req, res) => {
 // PRODUCT MANAGEMENT
 // ════════════════════════
 
-router.get('/products', async (req, res) => {
+router.get('/products', canDo('view-products'), async (req, res) => {
     try {
         const { category_id, page = 1, limit = 50 } = req.query;
         const where = {};
@@ -270,7 +378,7 @@ router.get('/products', async (req, res) => {
     }
 });
 
-router.post('/products', upload.single('image'), async (req, res) => {
+router.post('/products', canDo('create-products'), upload.single('image'), async (req, res) => {
     try {
         const { name, category_id, price, consignation_price, stock_quantity, description } = req.body;
         if (!name || !category_id || !price) {

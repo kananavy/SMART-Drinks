@@ -4,9 +4,12 @@
     <div class="flex items-start justify-between mb-8 flex-wrap gap-4">
       <div>
         <h1 class="text-3xl font-display font-black tracking-tighter">GESTION DES COMMANDES</h1>
-        <p class="text-secondary text-sm mt-1">Traitez et validez les commandes en temps reel</p>
+        <p class="text-secondary text-sm mt-1">Traitez et validez les commandes en temps réel</p>
       </div>
-        <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3">
+        <div v-if="newOrderAlert" class="glass px-4 py-2.5 rounded-xl border border-warning/40 bg-warning/10 flex items-center gap-2 text-xs font-bold text-warning animate-pulse">
+          🔔 Nouvelle commande !
+        </div>
         <div class="glass px-4 py-2.5 rounded-xl border border-white/5 flex items-center gap-2 text-xs font-bold text-muted">
           <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
           Refresh dans <span class="text-primary font-black">{{ countdown }}s</span>
@@ -18,8 +21,8 @@
     </div>
 
     <!-- Stats Bar -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-      <div v-for="s in statCounts" :key="s.key" @click="fetchOrders(s.key === 'all' ? '' : s.key)"
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
+      <div v-for="s in statCounts" :key="s.key" @click="setFilter(s.key)"
         :class="['glass-card p-4 text-center cursor-pointer transition-all border-t-2',
                  (s.key === 'all' ? activeStatus === '' : activeStatus === s.key) ? 'border-primary shadow-glow scale-[1.02]' : 'border-transparent hover:border-primary/30']">
         <span class="block text-2xl font-display font-black mb-1" :class="s.color">{{ s.count }}</span>
@@ -67,6 +70,7 @@
             <span v-if="order.ClientSession" class="text-[10px] font-bold text-secondary bg-white/5 px-2.5 py-1 rounded-full border border-color">
               🪑 {{ order.ClientSession.table_name }}
             </span>
+            <span v-if="order.is_takeaway" class="text-[10px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20">emporter</span>
             <span :class="['badge', `badge-${order.status}`]">{{ statusLabel(order.status) }}</span>
           </div>
         </div>
@@ -95,6 +99,12 @@
             <p class="font-display font-black text-xl text-primary">{{ formatPrice(order.total) }}</p>
           </div>
           <div class="flex gap-2">
+            <button v-if="['pending', 'confirmed'].includes(order.status)"
+              @click="cancelOrder(order.id)"
+              :disabled="processing[order.id]"
+              class="btn btn-danger btn-sm flex items-center gap-1.5 text-[10px] py-1.5 px-3">
+              ❌ Annuler
+            </button>
             <button v-if="order.status === 'pending'"
               @click="confirmOrder(order.id)"
               :disabled="processing[order.id]"
@@ -112,6 +122,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Cancel Confirm Modal -->
+    <div v-if="cancelTarget" class="modal-overlay z-[400]" @click.self="cancelTarget = null">
+      <div class="glass-card max-w-sm w-full p-6 mx-4 text-center">
+        <div class="text-5xl mb-4">⚠️</div>
+        <h2 class="font-display font-black text-lg mb-2">Annuler la commande ?</h2>
+        <p class="text-secondary text-sm mb-6">Cette action est irréversible. Le stock sera restauré si la commande était confirmée.</p>
+        <div class="flex gap-3 justify-center">
+          <button @click="cancelTarget = null" class="btn btn-secondary px-6">Non, garder</button>
+          <button @click="confirmCancel" :disabled="cancelling" class="btn btn-danger px-6">
+            {{ cancelling ? 'Annulation...' : 'Oui, annuler' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -126,21 +151,28 @@ const loading = ref(true);
 const activeStatus = ref('');
 const processing = ref({});
 const countdown = ref(30);
+const newOrderAlert = ref(false);
+const cancelTarget = ref(null);
+const cancelling = ref(false);
 let refreshInterval = null;
 let countdownInterval = null;
+let alertTimer = null;
+let prevOrderIds = new Set();
 
 const statuses = [
   { value: '', label: 'Toutes' },
   { value: 'pending', label: 'En attente' },
-  { value: 'confirmed', label: 'Confirmees' },
-  { value: 'validated', label: 'Validees' },
+  { value: 'confirmed', label: 'Confirmées' },
+  { value: 'validated', label: 'Validées' },
+  { value: 'cancelled', label: 'Annulées' },
 ];
 
 const statCounts = computed(() => [
   { key: 'all', label: 'Toutes', count: orders.value.length, color: 'text-primary' },
   { key: 'pending', label: 'En attente', count: orders.value.filter(o => o.status === 'pending').length, color: 'text-warning' },
-  { key: 'confirmed', label: 'Confirmees', count: orders.value.filter(o => o.status === 'confirmed').length, color: 'text-info' },
-  { key: 'validated', label: 'Validees', count: orders.value.filter(o => o.status === 'validated').length, color: 'text-secondary' },
+  { key: 'confirmed', label: 'Confirmées', count: orders.value.filter(o => o.status === 'confirmed').length, color: 'text-info' },
+  { key: 'validated', label: 'Validées', count: orders.value.filter(o => o.status === 'validated').length, color: 'text-secondary' },
+  { key: 'cancelled', label: 'Annulées', count: orders.value.filter(o => o.status === 'cancelled').length, color: 'text-danger' },
 ]);
 
 const formatPrice = (p) => new Intl.NumberFormat('fr-FR').format(p) + ' Ar';
@@ -160,7 +192,7 @@ const timeAgoClass = (dateStr) => {
   return 'bg-danger/15 text-danger';
 };
 const formatDate = (d) => new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-const statusLabel = (s) => ({ pending: 'En attente', confirmed: 'Confirmee', validated: 'Validee', paid: 'Payee', cancelled: 'Annulee' }[s] || s);
+const statusLabel = (s) => ({ pending: 'En attente', confirmed: 'Confirmée', validated: 'Validée', paid: 'Payée', cancelled: 'Annulée' }[s] || s);
 const statusIcon = (s) => ({ pending: '⏳', confirmed: '✅', validated: '📤', paid: '💰', cancelled: '❌' }[s] || '📋');
 
 const statusHeaderClass = (s) => ({
@@ -168,16 +200,33 @@ const statusHeaderClass = (s) => ({
   confirmed: 'bg-info/5',
   validated: 'bg-secondary/5',
   paid: 'bg-success/5',
+  cancelled: 'bg-danger/5',
 }[s] || '');
 
-const fetchOrders = async (status = '') => {
+const setFilter = (key) => {
+  fetchOrders(key === 'all' ? '' : key);
+};
+
+const fetchOrders = async (status = activeStatus.value) => {
   activeStatus.value = status;
   loading.value = true;
   try {
     const params = status ? { status } : {};
     const { data } = await api.get('/vendor/orders', { params });
-    if (data.success) orders.value = data.data.orders;
-  } catch (err) {
+    if (data.success) {
+      const newOrders = data.data.orders;
+      if (prevOrderIds.size > 0) {
+        const hasNew = newOrders.some(o => !prevOrderIds.has(o.id));
+        if (hasNew) {
+          newOrderAlert.value = true;
+          clearTimeout(alertTimer);
+          alertTimer = setTimeout(() => { newOrderAlert.value = false; }, 5000);
+        }
+      }
+      prevOrderIds = new Set(newOrders.map(o => o.id));
+      orders.value = newOrders;
+    }
+  } catch {
     toast.error('Erreur de chargement');
   } finally {
     loading.value = false;
@@ -188,7 +237,7 @@ const confirmOrder = async (id) => {
   processing.value[id] = true;
   try {
     await api.put(`/vendor/orders/${id}/confirm`);
-    toast.success('Commande confirmee');
+    toast.success('Commande confirmée');
     fetchOrders(activeStatus.value);
   } catch (err) {
     toast.error(err.response?.data?.message || 'Erreur');
@@ -201,12 +250,31 @@ const validateOrder = async (id) => {
   processing.value[id] = true;
   try {
     await api.put(`/vendor/orders/${id}/validate`);
-    toast.success('Commande validee — envoyee au caissier');
+    toast.success('Commande validée — envoyée au caissier');
     fetchOrders(activeStatus.value);
   } catch (err) {
     toast.error(err.response?.data?.message || 'Erreur');
   } finally {
     processing.value[id] = false;
+  }
+};
+
+const cancelOrder = (id) => {
+  cancelTarget.value = id;
+};
+
+const confirmCancel = async () => {
+  if (!cancelTarget.value) return;
+  cancelling.value = true;
+  try {
+    await api.put(`/vendor/orders/${cancelTarget.value}/cancel`);
+    toast.success('Commande annulée');
+    cancelTarget.value = null;
+    fetchOrders(activeStatus.value);
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Erreur lors de l\'annulation');
+  } finally {
+    cancelling.value = false;
   }
 };
 
@@ -226,5 +294,6 @@ onMounted(() => {
 onUnmounted(() => {
   clearInterval(refreshInterval);
   clearInterval(countdownInterval);
+  clearTimeout(alertTimer);
 });
 </script>

@@ -9,7 +9,7 @@
       <div class="flex items-center gap-3">
         <div class="glass px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-          <span class="text-[10px] font-bold uppercase tracking-widest text-muted">Live</span>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-muted">Refresh dans <span class="text-primary">{{ Math.floor(countdown / 60) }}:{{ String(countdown % 60).padStart(2, '0') }}</span></span>
         </div>
         <button @click="loadStats" :disabled="loading" class="glass px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2 hover:border-primary/30 transition-all text-xs font-bold text-secondary hover:text-white">
           <span :class="{ 'animate-spin': loading }">🔄</span> Actualiser
@@ -185,7 +185,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import api from '@/services/api';
 import { useToastStore } from '@/stores/toast';
 
@@ -193,6 +193,9 @@ const toast = useToastStore();
 const stats = ref({});
 const loading = ref(true);
 const revPeriod = ref(30);
+const countdown = ref(300);
+let refreshInterval = null;
+let countdownInterval = null;
 
 const periods = [
   { val: 7, label: '7J' },
@@ -266,7 +269,7 @@ const getBarHeight = (total) => {
   return total === 0 ? MIN_H : Math.max(MIN_H, (total / maxRevenue.value) * MAX_H);
 };
 
-const getBarColor = (total, i) => {
+const getBarColor = (total) => {
   const ratio = total / maxRevenue.value;
   if (ratio > 0.8) return 'linear-gradient(to top, #6366f1, #818cf8)';
   if (ratio > 0.5) return 'linear-gradient(to top, #8b5cf6, #a78bfa)';
@@ -295,7 +298,26 @@ const loadStats = async () => {
   }
 };
 
-onMounted(loadStats);
+const startAutoRefresh = () => {
+  refreshInterval = setInterval(() => {
+    loadStats();
+    countdown.value = 300;
+  }, 300000); // 5 minutes
+  countdownInterval = setInterval(() => {
+    countdown.value--;
+    if (countdown.value <= 0) countdown.value = 300;
+  }, 1000);
+};
+
+onMounted(() => {
+  loadStats();
+  startAutoRefresh();
+});
+
+onUnmounted(() => {
+  clearInterval(refreshInterval);
+  clearInterval(countdownInterval);
+});
 </script>
 
 <style scoped>

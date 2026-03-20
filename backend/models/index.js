@@ -10,6 +10,7 @@ const Setting = require('./Setting');
 const ActivityLog = require('./ActivityLog');
 const Permission = require('./Permission');
 const UserPermission = require('./UserPermission');
+const RolePermission = require('./RolePermission');
 
 // ── Associations ──
 
@@ -43,7 +44,7 @@ User.prototype.hasPermission = async function (permissionName) {
 };
 
 // User <-> ClientSession
-User.hasMany(ClientSession, { foreignKey: 'user_id' });
+User.hasMany(ClientSession, { foreignKey: 'user_id', constraints: false });
 ClientSession.belongsTo(User, { foreignKey: 'user_id' });
 
 // Category <-> Product
@@ -75,11 +76,11 @@ Product.hasMany(StockEntry, { foreignKey: 'product_id' });
 StockEntry.belongsTo(Product, { foreignKey: 'product_id' });
 
 // User <-> StockEntry
-User.hasMany(StockEntry, { foreignKey: 'user_id' });
+User.hasMany(StockEntry, { foreignKey: 'user_id', constraints: false });
 StockEntry.belongsTo(User, { foreignKey: 'user_id' });
 
 // User <-> ActivityLog
-User.hasMany(ActivityLog, { foreignKey: 'user_id' });
+User.hasMany(ActivityLog, { foreignKey: 'user_id', constraints: false });
 ActivityLog.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = {
@@ -95,4 +96,5 @@ module.exports = {
     ActivityLog,
     Permission,
     UserPermission,
+    RolePermission,
 };

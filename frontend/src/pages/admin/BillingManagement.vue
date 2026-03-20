@@ -72,8 +72,8 @@
             <tr v-for="order in orders" :key="order.id">
               <td class="font-display font-black text-sm text-primary-light">#{{ order.id }}</td>
               <td class="text-xs whitespace-nowrap">
-                <div class="font-bold">{{ formatDate(order.created_at) }}</div>
-                <div class="text-muted text-[10px]">{{ formatTime(order.created_at) }}</div>
+                <div class="font-bold">{{ formatDate(order.createdAt || order.created_at) }}</div>
+                <div class="text-muted text-[10px]">{{ formatTime(order.createdAt || order.created_at) }}</div>
               </td>
               <td>
                 <div class="flex items-center gap-2">
@@ -129,7 +129,7 @@
         <div class="flex justify-between items-start mb-6">
           <div>
             <h2 class="text-xl font-display font-black tracking-tight uppercase">DÉTAIL — Commande #{{ selectedOrder.id }}</h2>
-            <p class="text-secondary text-sm">{{ selectedOrder.ClientSession?.table_name || 'Client de passage' }} · {{ formatDate(selectedOrder.created_at) }}</p>
+            <p class="text-secondary text-sm">{{ selectedOrder.ClientSession?.table_name || 'Client de passage' }} · {{ formatDate(selectedOrder.createdAt || selectedOrder.created_at) }}</p>
           </div>
           <button @click="selectedOrder = null" class="text-muted hover:text-white text-xl leading-none">✕</button>
         </div>
@@ -161,8 +161,10 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import api from '@/services/api';
 import { useToastStore } from '@/stores/toast';
+import { useAuthStore } from '@/stores/auth';
 
 const toast = useToastStore();
+const authStore = useAuthStore();
 const loading = ref(true);
 const orders = ref([]);
 const tab = ref('paid');
@@ -200,7 +202,9 @@ const fetchOrders = async () => {
     if (dateFrom.value) params.date_from = dateFrom.value;
     if (dateTo.value) params.date_to = dateTo.value;
 
-    const { data } = await api.get('/admin/orders', { params });
+    const isCaissier = authStore.userRole === 'caissier';
+    const endpoint = isCaissier ? '/cashier/billing' : '/admin/orders';
+    const { data } = await api.get(endpoint, { params });
     if (data.success) {
       orders.value = data.data;
       totalPages.value = data.pagination?.totalPages || 1;
@@ -256,7 +260,7 @@ const exportCSV = () => {
   const headers = ['ID', 'Date', 'Client', 'Montant', 'Statut'];
   const rows = orders.value.map(o => [
     o.id,
-    new Date(o.created_at).toLocaleDateString('fr-FR'),
+    new Date(o.createdAt || o.created_at).toLocaleDateString('fr-FR'),
     o.ClientSession?.table_name || 'Client de passage',
     o.total,
     o.status,
@@ -271,8 +275,16 @@ const exportCSV = () => {
 };
 
 const formatAmount = (v) => new Intl.NumberFormat('fr-FR').format(Math.round(v || 0)) + ' Ar';
-const formatDate = (d) => new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(d));
-const formatTime = (d) => new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' }).format(new Date(d));
+const formatDate = (d) => {
+  if (!d) return '—';
+  const date = new Date(d);
+  return isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+};
+const formatTime = (d) => {
+  if (!d) return '—';
+  const date = new Date(d);
+  return isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' }).format(date);
+};
 
 onMounted(fetchOrders);
 </script>

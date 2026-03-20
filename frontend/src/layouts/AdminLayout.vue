@@ -25,7 +25,6 @@
           @click.prevent="item.locked ? null : undefined"
           :class="['nav-item group flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 relative',
                    $route.path === item.to ? 'bg-primary text-white shadow-glow' : item.locked ? 'text-muted opacity-50 cursor-not-allowed' : 'text-secondary hover:bg-white/5 hover:text-white']"
-          v-show="item.roles.includes(userRole)"
         >
           <span class="text-xl group-hover:scale-110 transition-transform flex-shrink-0">{{ item.icon }}</span>
           <span v-if="!sidebarCollapsed" class="font-bold text-sm tracking-tight flex-1">{{ item.label }}</span>
@@ -131,16 +130,26 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useToastStore } from '@/stores/toast';
 import { usePlanStore } from '@/stores/plan';
+import { usePermissionsStore } from '@/stores/permissions';
 
 const router = useRouter();
 const auth = useAuthStore();
 const toast = useToastStore();
 const planStore = usePlanStore();
+const permStore = usePermissionsStore();
 const sidebarCollapsed = ref(false);
 
 onMounted(async () => {
   const saved = localStorage.getItem('bar_sidebar_collapsed');
   if (saved !== null) sidebarCollapsed.value = saved === 'true';
+
+  // Ensure permissions are available (may not be if restorePermissions() hasn't run yet)
+  if (!permStore.loaded && auth.user) {
+    if (!permStore.loadFromCache()) {
+      await permStore.initialize(auth.user);
+    }
+  }
+
   if (auth.userRole === 'superadmin') {
     await planStore.load();
   }
@@ -155,49 +164,49 @@ const userRole = computed(() => auth.userRole);
 const roleLabel = computed(() => ({
   vendeur: 'Vendeur',
   caissier: 'Caissier',
+  admin: 'Administrateur',
   superadmin: 'Super Admin',
 }[userRole.value] || userRole.value));
 
 const allMenuItems = [
-  { to: '/admin/orders', icon: '📋', label: 'Commandes', roles: ['vendeur', 'caissier', 'superadmin'], feature: null },
-  { to: '/admin/orders/create', icon: '➕', label: 'Nouvelle Commande', roles: ['vendeur', 'superadmin'], feature: null },
-  { to: '/admin/payments', icon: '💳', label: 'Paiements', roles: ['caissier', 'superadmin'], feature: 'payments' },
-  { to: '/admin/categories', icon: '📂', label: 'Categories', roles: ['superadmin'], feature: null },
-  { to: '/admin/products', icon: '📦', label: 'Produits', roles: ['superadmin'], feature: null },
-  { to: '/admin/stock', icon: '🏪', label: 'Stock', roles: ['superadmin'], feature: 'stock' },
-  { to: '/admin/users', icon: '👥', label: 'Utilisateurs', roles: ['superadmin'], feature: 'users' },
-  { to: '/admin/statistics', icon: '📊', label: 'Statistiques', roles: ['superadmin'], feature: 'stats_basic' },
-  { to: '/admin/activity-log', icon: '📜', label: 'Journaux', roles: ['superadmin'], feature: 'activity_log' },
-  { to: '/admin/billing', icon: '🧾', label: 'Facturation', roles: ['superadmin', 'caissier'], feature: 'billing' },
-  { to: '/admin/settings', icon: '⚙️', label: 'Parametres', roles: ['superadmin'], feature: null },
-  { to: '/admin/plans', icon: '👑', label: 'Plans & Licences', roles: ['superadmin'], feature: null },
+  { to: '/admin/orders', icon: '📋', label: 'Commandes', permission: 'view-orders', feature: null },
+  { to: '/admin/orders/create', icon: '➕', label: 'Nouvelle Commande', permission: 'create-orders', feature: null },
+  { to: '/admin/payments', icon: '💳', label: 'Paiements', permission: 'process-payments', feature: 'payments' },
+  { to: '/admin/billing', icon: '🧾', label: 'Facturation', permission: 'view-billing', feature: 'billing' },
+  { to: '/admin/categories', icon: '📂', label: 'Categories', permission: 'view-categories', feature: null },
+  { to: '/admin/products', icon: '📦', label: 'Produits', permission: 'view-products', feature: null },
+  { to: '/admin/stock', icon: '🏪', label: 'Stock', permission: 'view-stock', feature: 'stock' },
+  { to: '/admin/users', icon: '👥', label: 'Utilisateurs', permission: 'view-users', feature: 'users' },
+  { to: '/admin/roles', icon: '🔐', label: 'Rôles & Accès', permission: 'manage-permissions', feature: null },
+  { to: '/admin/statistics', icon: '📊', label: 'Statistiques', permission: 'view-statistics', feature: 'stats_basic' },
+  { to: '/admin/activity-log', icon: '📜', label: 'Journaux', permission: 'view-activity-log', feature: 'activity_log' },
+  { to: '/admin/settings', icon: '⚙️', label: 'Parametres', permission: 'view-settings', feature: null },
+  { to: '/admin/plans', icon: '👑', label: 'Plans & Licences', permission: 'manage-plans', feature: null },
 ];
 
-const menuItems = computed(() => allMenuItems.map(item => ({
-  ...item,
-  locked: item.feature && !planStore.hasFeature(item.feature),
-})));
+const menuItems = computed(() => {
+  // While permissions are loading, use role as quick fallback
+  const hasAccess = (permission) => {
+    if (!permStore.loaded) return ['admin', 'superadmin'].includes(userRole.value);
+    return permStore.can(permission);
+  };
+  return allMenuItems
+    .filter(item => hasAccess(item.permission))
+    .map(item => ({
+      ...item,
+      locked: item.feature && !planStore.hasFeature(item.feature),
+    }));
+});
 
 const mobileNavItems = computed(() => {
-  const byRole = {
-    vendeur: [
-      { to: '/admin/orders', icon: '📋', label: 'Commandes', mobileLabel: 'Orders' },
-      { to: '/admin/orders/create', icon: '➕', label: 'Nouveau' },
-    ],
-    caissier: [
-      { to: '/admin/orders', icon: '📋', label: 'Commandes' },
-      { to: '/admin/payments', icon: '💳', label: 'Paiements' },
-      { to: '/admin/billing', icon: '🧾', label: 'Factures' },
-    ],
-    superadmin: [
-      { to: '/admin/orders', icon: '📋', label: 'Commandes' },
-      { to: '/admin/payments', icon: '💳', label: 'Paiements' },
-      { to: '/admin/products', icon: '📦', label: 'Produits' },
-      { to: '/admin/statistics', icon: '📊', label: 'Stats' },
-      { to: '/admin/settings', icon: '⚙️', label: 'Config' },
-    ],
+  const hasAccess = (permission) => {
+    if (!permStore.loaded) return ['admin', 'superadmin'].includes(userRole.value);
+    return permStore.can(permission);
   };
-  return byRole[userRole.value] || byRole.vendeur;
+  return allMenuItems
+    .filter(item => hasAccess(item.permission))
+    .slice(0, 5)
+    .map(item => ({ to: item.to, icon: item.icon, label: item.label }));
 });
 
 const handleLogout = () => {

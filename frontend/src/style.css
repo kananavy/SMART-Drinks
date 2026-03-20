@@ -70,9 +70,12 @@
 }
 
 /* ── Base Styles ── */
+html {
+  font-size: 14px; /* Makes all rem-based Tailwind values ~87.5% smaller */
+}
+
 body {
   font-family: var(--font-primary);
-  font-size: var(--base-font-size, 14px);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   line-height: 1.6;

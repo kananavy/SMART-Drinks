@@ -49,8 +49,8 @@
           <tbody>
             <tr v-for="log in logs" :key="log.id">
               <td class="whitespace-nowrap">
-                <div class="text-xs font-bold">{{ formatDate(log.created_at) }}</div>
-                <div class="text-[10px] text-muted font-mono">{{ formatTime(log.created_at) }}</div>
+                <div class="text-xs font-bold">{{ formatDate(log.createdAt || log.created_at) }}</div>
+                <div class="text-[10px] text-muted font-mono">{{ formatTime(log.createdAt || log.created_at) }}</div>
               </td>
               <td>
                 <div class="flex items-center gap-2">
@@ -69,7 +69,7 @@
                 </span>
               </td>
               <td class="text-xs text-secondary max-w-xs truncate">{{ log.description }}</td>
-              <td class="font-mono text-[10px] text-muted">{{ log.ip_address || '—' }}</td>
+              <td class="font-mono text-[10px] text-muted">{{ log.ip_address || log.ipAddress || '—' }}</td>
             </tr>
           </tbody>
         </table>
@@ -182,8 +182,16 @@ const roleColor = (role) => {
   return 'bg-white/10 text-secondary';
 };
 
-const formatDate = (d) => new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(d));
-const formatTime = (d) => new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(d));
+const formatDate = (d) => {
+  if (!d) return '—';
+  const date = new Date(d);
+  return isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+};
+const formatTime = (d) => {
+  if (!d) return '—';
+  const date = new Date(d);
+  return isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(date);
+};
 
 onMounted(() => fetchLogs());
 </script>

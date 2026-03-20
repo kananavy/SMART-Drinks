@@ -1,9 +1,33 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
-const { User, ClientSession } = require('../models');
+const { User, ClientSession, RolePermission } = require('../models');
 const auth = require('../middleware/auth');
 const logActivity = require('../utils/logActivity');
 const { success, error } = require('../utils/response');
+
+// Role default permissions (mirrors frontend ROLE_DEFAULT_PERMISSIONS)
+const ROLE_DEFAULTS = {
+    vendeur: ['view-orders', 'create-orders', 'confirm-orders', 'validate-orders', 'cancel-orders', 'view-products', 'view-categories'],
+    caissier: ['view-payments', 'process-payments', 'view-billing', 'export-billing', 'view-orders-readonly'],
+    admin: [
+        'view-orders', 'create-orders', 'confirm-orders', 'validate-orders', 'cancel-orders',
+        'view-payments', 'process-payments', 'view-billing', 'export-billing',
+        'view-users', 'create-users', 'edit-users',
+        'view-products', 'create-products', 'edit-products', 'delete-products',
+        'view-categories', 'create-categories', 'edit-categories', 'delete-categories',
+        'view-stock', 'manage-stock', 'view-statistics',
+        'view-settings', 'view-activity-log',
+    ],
+    superadmin: [
+        'view-orders', 'create-orders', 'confirm-orders', 'validate-orders', 'cancel-orders',
+        'view-payments', 'process-payments', 'view-billing', 'export-billing',
+        'view-users', 'create-users', 'edit-users', 'delete-users', 'manage-permissions',
+        'view-products', 'create-products', 'edit-products', 'delete-products',
+        'view-categories', 'create-categories', 'edit-categories', 'delete-categories',
+        'view-stock', 'manage-stock', 'view-statistics',
+        'view-settings', 'edit-settings', 'view-activity-log', 'manage-plans',
+    ],
+};
 
 // Generate a random 6-digit access code
 const generateCode = () => String(Math.floor(100000 + Math.random() * 900000));
@@ -122,7 +146,7 @@ router.post('/login', async (req, res) => {
         }
 
         const user = await User.findOne({
-            where: { email, role: ['vendeur', 'caissier', 'superadmin'] },
+            where: { email, role: ['vendeur', 'caissier', 'admin', 'superadmin'] },
         });
 
         if (!user) {
@@ -158,6 +182,29 @@ router.get('/profile', auth, async (req, res) => {
     try {
         return success(res, { user: req.user.toJSON() });
     } catch (err) {
+        return error(res, 'Erreur serveur');
+    }
+});
+
+// ── Get Current User Effective Permissions ──
+router.get('/permissions', auth, async (req, res) => {
+    try {
+        const userRole = req.user.role;
+        // Superadmin always has all permissions, no DB override needed
+        if (userRole === 'superadmin') {
+            return success(res, { role: userRole, permissions: ROLE_DEFAULTS.superadmin });
+        }
+
+        // Check DB for role-level overrides (admin, vendeur, caissier)
+        const dbPerms = await RolePermission.findAll({ where: { role: userRole, granted: true } });
+        if (dbPerms.length > 0) {
+            return success(res, { role: userRole, permissions: dbPerms.map(p => p.permission_name) });
+        }
+
+        // Fall back to hardcoded defaults
+        return success(res, { role: userRole, permissions: ROLE_DEFAULTS[userRole] || [] });
+    } catch (err) {
+        console.error('Permissions error:', err);
         return error(res, 'Erreur serveur');
     }
 });
